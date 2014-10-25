@@ -6,6 +6,8 @@
 #include "Tank.h"
 #include <vector>
 
+enum zoom_level {ZOOM1 = 500, ZOOM2 = 750, ZOOM3 = 1000, ZOOM4 = 1250, ZOOM5 = 1500};
+
 using namespace std;
  
 class DemoApp : public BaseApplication
@@ -54,10 +56,11 @@ private:
 	
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
+	bool addNewTank();
 
 	// Current camera zoom
 	Ogre::Vector3 camHeightAtPos;
-	float currentZoom;
+	zoom_level currentZoom;
 public:
     DemoApp(void);
     virtual ~DemoApp(void);
@@ -69,8 +72,8 @@ protected:
     virtual bool frameRenderingQueued(const Ogre::FrameEvent& evt);
     virtual bool keyPressed( const OIS::KeyEvent &arg );
     virtual bool keyReleased( const OIS::KeyEvent &arg );
+	virtual bool mouseMoved( const OIS::MouseEvent &arg );
 	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
-
 };
  
 #endif // #ifndef __DemoApp_h_

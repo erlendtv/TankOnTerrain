@@ -15,7 +15,7 @@ DemoApp::DemoApp(void)
 	mBarrelPitch = 0;
 	mHeightOffset = 18;
 	cameraAttachedToNode = false;
-	currentZoom = 500;
+	currentZoom = ZOOM1;
 	tankBodyMoveFactor = 1.5;
 	tankBodyRotFactor = 1;
 	tankTurretRotFactor = 1;
@@ -402,8 +402,12 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		}
 		else if(mMouse->getMouseState().Y.abs < 20){
 			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x, 0, oldPos.z - 10);
-			mGodCameraHolder->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z - 10);
+			mCamera->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z - 10);
+		} else {
+			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x, 0, oldPos.z);
+			mCamera->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z);
 		}
+
 	}
 	
 	return ret;
@@ -531,6 +535,53 @@ bool DemoApp::keyReleased( const OIS::KeyEvent &arg )
 	return true;
 }
 
+bool DemoApp::mouseMoved( const OIS::MouseEvent &arg )
+{
+    if (mTrayMgr->injectMouseMove(arg)) return true;
+
+	// zoom?
+	if (mMouse->getMouseState().Z.rel < 0) {
+
+		switch (currentZoom) {
+			case ZOOM1:
+				currentZoom = ZOOM2;
+			break;
+			case ZOOM2:
+				currentZoom = ZOOM3;
+			break;
+			case ZOOM3:
+				currentZoom = ZOOM4;
+			break;
+			case ZOOM4:
+				currentZoom = ZOOM5;
+			break;
+			case ZOOM5:
+				// do nothing
+			break;
+		}
+	} else if (mMouse->getMouseState().Z.rel > 0) {
+			switch (currentZoom) {
+			case ZOOM1:
+				// do nothing
+			break;
+			case ZOOM2:
+				currentZoom = ZOOM1;
+			break;
+			case ZOOM3:
+				currentZoom = ZOOM2;
+			break;
+			case ZOOM4:
+				currentZoom = ZOOM3;
+			break;
+			case ZOOM5:
+				currentZoom = ZOOM4;
+				// do nothing
+			break;
+		}
+	}
+
+	return true;
+}
 
  
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32

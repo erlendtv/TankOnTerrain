@@ -14,6 +14,7 @@ private:
 	Ogre::SceneNode* mTankBodyNode;
 	Ogre::SceneNode* mTankTurretNode;
 	Ogre::SceneNode* mTankBarrelNode;
+	Ogre::SceneNode* mCameraHolder;
 
 	/* tank movement variables */
 	float mMove;
