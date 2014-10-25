@@ -406,6 +406,35 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	return ret;
 }
+
+void DemoApp::selectTank(){
+	Ogre::Ray mouseRay = mCamera->getCameraToViewportRay(
+	static_cast<float>(mMouse->getMouseState().X.abs)/mMouse->getMouseState().width, 
+	static_cast<float>(mMouse->getMouseState().Y.abs)/mMouse->getMouseState().height);
+	Ogre::RaySceneQuery * mRaySceneQuery = mSceneMgr->createRayQuery(mouseRay);
+	// Set type of objects to query
+	mRaySceneQuery->setQueryTypeMask(Ogre::SceneManager::ENTITY_TYPE_MASK);
+	mRaySceneQuery->setSortByDistance(true);
+	// Ray-cast and get first hit
+	Ogre::RaySceneQueryResult &result = mRaySceneQuery->execute();
+	Ogre::RaySceneQueryResult::iterator itr = result.begin();
+	// If hit a movable object
+	if(itr != result.end() && itr->movable){
+		if(itr->movable->getName() == "chbody1"){
+		cameraAttachedToNode = true;
+		}
+	}			
+}
+
+bool DemoApp::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id ){
+	switch(id){
+	case OIS::MB_Left:
+		selectTank();
+		break;
+	}
+	return true;
+}
+
  
 // OIS::KeyListener
 bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
