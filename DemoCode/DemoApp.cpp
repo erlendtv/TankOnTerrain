@@ -10,7 +10,16 @@ DemoApp::DemoApp(void)
 {
 	mMove = 0;
 	mBodyRotate = 0;
+	mTurretRotate = 0;
+	mBarrelRotate = 0;
+	mBarrelPitch = 0;
 	mHeightOffset = 18;
+	cameraAttachedToNode = false;
+	currentZoom = 500;
+	tankBodyMoveFactor = 1.5;
+	tankBodyRotFactor = 1;
+	tankTurretRotFactor = 1;
+	tankBarrelRotFactor = 1;
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
@@ -98,7 +107,7 @@ void DemoApp::configureTerrainDefaults(Ogre::Light* light)
     Ogre::Terrain::ImportData& defaultimp = mTerrainGroup->getDefaultImportSettings();
     defaultimp.terrainSize = 513;
     defaultimp.worldSize = 12000.0f;
-    defaultimp.inputScale = 1200;
+    defaultimp.inputScale = 600;
     defaultimp.minBatchSize = 33;
     defaultimp.maxBatchSize = 65;
     // textures
@@ -116,8 +125,8 @@ void DemoApp::configureTerrainDefaults(Ogre::Light* light)
 //-------------------------------------------------------------------------------------
 void DemoApp::createScene(void)
 {
-    mCamera->setPosition(Ogre::Vector3(1683, 500, 2116));
-    mCamera->lookAt(Ogre::Vector3(1963, 50, 1660));
+    mCamera->setPosition(Ogre::Vector3(1800, currentZoom, 1800));
+    mCamera->lookAt(Ogre::Vector3(1800, 100, 1800));
     mCamera->setNearClipDistance(0.1);
     mCamera->setFarClipDistance(50000);
  
@@ -180,27 +189,44 @@ void DemoApp::createScene(void)
     //mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8, 500);
     mSceneMgr->setSkyPlane(true, plane, "Examples/CloudySky", 500, 20, true, 0.5, 150, 150);
 
+
+	//ADD A TANK WITH TURRET AND BARREL
 	// Create tank body entity
-	mTankEntity = mSceneMgr->createEntity("chbody1", "chbody.mesh");
-	mTankEntity->setCastShadows(true);
-	mTankEntity->setMaterialName("ch_tank_material");
+	Ogre::Entity* tankBody = mSceneMgr->createEntity("chbody1", "chbody.mesh");
+	tankBody->setCastShadows(true);
+	tankBody->setMaterialName("ch_tank_material");
 
-	// Create scene node for the tank
-	mTankNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	mTankNode->attachObject(mTankEntity);
+	// Create tank turret entity
+	Ogre::Entity* tankTurret = mSceneMgr->createEntity("chturret1", "chturret.mesh");
+	tankTurret->setCastShadows(true);
+	tankTurret->setMaterialName("ch_tank_material");
 
-	mTerrain = mTerrainGroup->getTerrain(0, 0);
+	// Create tank barrel entity
+	Ogre::Entity* tankBarrel = mSceneMgr->createEntity("chbarrel1", "chbarrel.mesh");
+	tankBarrel->setCastShadows(true);
+	tankBarrel->setMaterialName("ch_tank_material");
+
+	// Create a child scene node and attach tank body to it
+	mTankBodyNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+	mTankBodyNode->attachObject(tankBody);
 
 	// Get the height of the terrain at a certain point
+	mTerrain = mTerrainGroup->getTerrain(0, 0);
 	float height = mTerrain->getHeightAtWorldPosition(1800, 0, 1800);
+	// Move it above the ground
+	mTankBodyNode->translate(1800, height + mHeightOffset, 1800);
 
-	// Place the entity on the ground
-	mTankNode->translate(1800, height + mHeightOffset, 1800);
+	// Create a child scene node from tank body's scene node and attach the tank turret to it
+	mTankTurretNode = mTankBodyNode->createChildSceneNode();
+	mTankTurretNode->attachObject(tankTurret);
+	// Move it above tank body
+	mTankTurretNode->translate(0, 3, 0);
 
-	// Create a manual object to show the normal vector
-	mNormalLine = mSceneMgr->createManualObject("Normal Vector");
-	mNormalLine->clear();
-	mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(mNormalLine);
+	// Create a child scene node from tank turret's scene node and attach the tank barrel to it
+	mTankBarrelNode = mTankTurretNode->createChildSceneNode();
+	mTankBarrelNode->attachObject(tankBarrel);
+	// Move it to the appropriate position on the turret
+	mTankBarrelNode->translate(-30, 10, 0);
 
 	// Water
 	Ogre::Entity *pWaterEntity;
@@ -263,17 +289,17 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
     }
 
 	// Move and rotate the tank
-	mTankNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
-	mTankNode->yaw(Ogre::Degree(mBodyRotate));
+	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
+	mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
 
 	// Get tank's current position
-	Ogre::Vector3 tankPosition = mTankNode->getPosition();
+	Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
 	// Move it above the ground
 	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition) + mHeightOffset;
-	mTankNode->setPosition(tankPosition);
+	mTankBodyNode->setPosition(tankPosition);
 
 	// Get current tank orientation
-	Ogre::Quaternion tankOrientation = mTankNode->getOrientation();
+	Ogre::Quaternion tankOrientation = mTankBodyNode->getOrientation();
 
 	// Get point on ground where the tank is
 	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition);
@@ -292,20 +318,19 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	Ogre::Vector3 normal = v1.crossProduct(v2);
 	normal.normalise();
 
+	// Rotate the tank turret
+	mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
 
+	// Calculate the tank barrel's current pitch
+	mBarrelPitch += mBarrelRotate;
 
-	// Update the normal vector's display
-	mNormalLine->clear();
-	// Specify the material and rendering type
-	mNormalLine->begin("BaseWhiteNoLighting", Ogre::RenderOperation::OT_LINE_STRIP);
-
-	mNormalLine->position(tankPosition);
-	mNormalLine->colour(1, 0, 0);
-	mNormalLine->position(tankPosition + normal*50);
-	mNormalLine->colour(1, 0, 0);
-
-	// Finished defining line
-	mNormalLine->end();
+	// Clamp tank barrel rotation between 0 and 30 degrees
+	if(mBarrelPitch > 30)
+		mBarrelPitch = 30;
+	else if(mBarrelPitch < 0)
+		mBarrelPitch = 0;
+	else
+		mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
 
 
 /*
@@ -329,7 +354,7 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	float weight = 0.0001;  // Weight of the new normal
 
 	// Get current orientation and local y direction
-	Ogre::Quaternion currentOrientation = mTankNode->getOrientation();
+	Ogre::Quaternion currentOrientation = mTankBodyNode->getOrientation();
 	Ogre::Vector3 localY = currentOrientation.yAxis();
 
 	// Compute a small amount to rotate based on weight
@@ -346,10 +371,38 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		Ogre::Quaternion inclination = Ogre::Quaternion(inclinationAngle, inclinationAxis);
 
 		// Orientate entity based on rotation quaternion
-		mTankNode->setOrientation( inclination * currentOrientation );
+		mTankBodyNode->setOrientation( inclination * currentOrientation );
 	}
 //////////////////////////////////////////////////////////////////////////////////
-
+	
+	// CAMERA ATTACHED TO OBJECT?
+	if(cameraAttachedToNode){
+		Ogre::Vector3 point = mTankBodyNode->getPosition();
+		mCamera->lookAt(point);
+		mCamera->setPosition(point.x + currentZoom, point.y + currentZoom, point.z + currentZoom);
+	} else {
+		// FIND HEIGHT FOR CAMERA AT NEW POSITION
+		Ogre::Vector3 oldPos = mCamera->getPosition();
+		float heightAtNew = 0;
+		
+		if(mMouse->getMouseState().X.abs > (mWindow->getWidth() - 20)){
+			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x + 10, 0, oldPos.z);
+			mCamera->setPosition(oldPos.x + 10,heightAtNew + currentZoom, oldPos.z);
+		}
+		else if(mMouse->getMouseState().X.abs < 20){
+			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x - 10, 0, oldPos.z);
+			mCamera->setPosition(oldPos.x - 10, heightAtNew + currentZoom, oldPos.z);
+		}
+		else if(mMouse->getMouseState().Y.abs > (mWindow->getHeight() - 20)){
+			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x, 0, oldPos.z + 10);
+			mCamera->setPosition(oldPos.x,heightAtNew + currentZoom, oldPos.z + 10);
+		}
+		else if(mMouse->getMouseState().Y.abs < 20){
+			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x, 0, oldPos.z - 10);
+			mCamera->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z - 10);
+		}
+	}
+	
 
 	return ret;
 }
@@ -362,21 +415,37 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
     switch (arg.key)
 	{
 		case OIS::KC_I:
-			mMove -= 0.1;
+			mMove -= tankBodyMoveFactor;
 			break;
 
 		case OIS::KC_K:
-			mMove += 0.1;
+			mMove += tankBodyMoveFactor;
 			break;
 
 		case OIS::KC_J:
-			mBodyRotate += 0.1;
+			mBodyRotate += tankBodyRotFactor;
 			break;
 
 		case OIS::KC_L:
-			mBodyRotate -= 0.1;
+			mBodyRotate -= tankBodyRotFactor;
 			break;
 
+		case OIS::KC_LEFT:
+			mTurretRotate += tankTurretRotFactor;
+			break;
+ 
+		case OIS::KC_RIGHT:
+			mTurretRotate -= tankTurretRotFactor;
+			break;
+
+		case OIS::KC_UP:
+			mBarrelRotate += tankBarrelRotFactor;
+			break;
+ 
+		case OIS::KC_DOWN:
+			mBarrelRotate -= tankBarrelRotFactor;
+			break;
+ 
 		case OIS::KC_ESCAPE: 
 			mShutDown = true;
 			break;
@@ -388,6 +457,7 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 	return true;
 }
 
+
 bool DemoApp::keyReleased( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyReleased(arg);
@@ -395,27 +465,44 @@ bool DemoApp::keyReleased( const OIS::KeyEvent &arg )
 	switch (arg.key)
 	{
 		case OIS::KC_I:
-			mMove += 0.1;
+			mMove += tankBodyMoveFactor;
 			break;
 
 		case OIS::KC_K:
-			mMove -= 0.1;
+			mMove -= tankBodyMoveFactor;
 			break;
 
 		case OIS::KC_J:
-			mBodyRotate -= 0.1;
+			mBodyRotate -= tankBodyRotFactor;
 			break;
 
 		case OIS::KC_L:
-			mBodyRotate += 0.1;
+			mBodyRotate += tankBodyRotFactor;
 			break;
 
+		case OIS::KC_LEFT:
+			mTurretRotate -= tankTurretRotFactor;
+			break;
+ 
+		case OIS::KC_RIGHT:
+			mTurretRotate += tankTurretRotFactor;
+			break;
+
+		case OIS::KC_UP:
+			mBarrelRotate -= tankBarrelRotFactor;
+			break;
+ 
+		case OIS::KC_DOWN:
+			mBarrelRotate += tankBarrelRotFactor;
+			break;
 		default:
 			break;
 	}
 
 	return true;
-} 
+}
+
+
  
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN
