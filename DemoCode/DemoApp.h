@@ -53,10 +53,11 @@ private:
 	// Select object
 	Ogre::SceneNode* selectedTankNode;
 	void selectTank();
+	int tankCounter;
 	
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
-	bool addNewTank();
+	bool addNewTank(const Ogre::Vector3 spawnPoint);
 
 	// Current camera zoom
 	Ogre::Vector3 camHeightAtPos;

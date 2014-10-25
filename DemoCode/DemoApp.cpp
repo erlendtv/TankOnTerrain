@@ -20,6 +20,7 @@ DemoApp::DemoApp(void)
 	tankBodyRotFactor = 1;
 	tankTurretRotFactor = 1;
 	tankBarrelRotFactor = 1;
+	tankCounter = 1;
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
@@ -192,44 +193,7 @@ void DemoApp::createScene(void)
     //mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8, 500);
     mSceneMgr->setSkyPlane(true, plane, "Examples/CloudySky", 500, 20, true, 0.5, 150, 150);
 
-
-	//ADD A TANK WITH TURRET AND BARREL
-	// Create tank body entity
-	Ogre::Entity* tankBody = mSceneMgr->createEntity("chbody1", "chbody.mesh");
-	tankBody->setCastShadows(true);
-	tankBody->setMaterialName("ch_tank_material");
-
-	// Create tank turret entity
-	Ogre::Entity* tankTurret = mSceneMgr->createEntity("chturret1", "chturret.mesh");
-	tankTurret->setCastShadows(true);
-	tankTurret->setMaterialName("ch_tank_material");
-
-	// Create tank barrel entity
-	Ogre::Entity* tankBarrel = mSceneMgr->createEntity("chbarrel1", "chbarrel.mesh");
-	tankBarrel->setCastShadows(true);
-	tankBarrel->setMaterialName("ch_tank_material");
-
-	// Create a child scene node and attach tank body to it
-	mTankBodyNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	mTankBodyNode->attachObject(tankBody);
-
-	// Get the height of the terrain at a certain point
-	mTerrain = mTerrainGroup->getTerrain(0, 0);
-	float height = mTerrain->getHeightAtWorldPosition(1800, 0, 1800);
-	// Move it above the ground
-	mTankBodyNode->translate(1800, height + mHeightOffset, 1800);
-
-	// Create a child scene node from tank body's scene node and attach the tank turret to it
-	mTankTurretNode = mTankBodyNode->createChildSceneNode();
-	mTankTurretNode->attachObject(tankTurret);
-	// Move it above tank body
-	mTankTurretNode->translate(0, 3, 0);
-
-	// Create a child scene node from tank turret's scene node and attach the tank barrel to it
-	mTankBarrelNode = mTankTurretNode->createChildSceneNode();
-	mTankBarrelNode->attachObject(tankBarrel);
-	// Move it to the appropriate position on the turret
-	mTankBarrelNode->translate(-30, 10, 0);
+	addNewTank(Ogre::Vector3(1800, 0, 1800));
 
 	// Water
 	Ogre::Entity *pWaterEntity;
@@ -427,6 +391,7 @@ void DemoApp::selectTank(){
 	// If hit a movable object
 	if(itr != result.end() && itr->movable && itr->movable->getName() != "water" ){
 		cameraAttachedToNode = true;
+		mTanks.at(0).mCameraHolder->attachObject(mCamera);
 	}			
 }
 
@@ -583,6 +548,58 @@ bool DemoApp::mouseMoved( const OIS::MouseEvent &arg )
 	return true;
 }
 
+bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
+
+	// Create tank body entity
+	Ogre::Entity* tankBody = mSceneMgr->createEntity("chbody" + tankCounter, "chbody.mesh");
+	tankBody->setCastShadows(true);
+	tankBody->setMaterialName("ch_tank_material");
+
+	// Create tank turret entity
+	Ogre::Entity* tankTurret = mSceneMgr->createEntity("chturret" + tankCounter, "chturret.mesh");
+	tankTurret->setCastShadows(true);
+	tankTurret->setMaterialName("ch_tank_material");
+
+	// Create tank barrel entity
+	Ogre::Entity* tankBarrel = mSceneMgr->createEntity("chbarrel" + tankCounter, "chbarrel.mesh");
+	tankBarrel->setCastShadows(true);
+	tankBarrel->setMaterialName("ch_tank_material");
+
+	// Create a child scene node and attach tank body to it
+	mTankBodyNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+	mTankBodyNode->attachObject(tankBody);
+
+	// Get the height of the terrain at a certain point
+	mTerrain = mTerrainGroup->getTerrain(0, 0);
+	float height = mTerrain->getHeightAtWorldPosition(spawnPoint.x, 0, spawnPoint.y);
+	// Move it above the ground
+	mTankBodyNode->translate(1800, height + mHeightOffset, 1800);
+
+	// Create a child scene node from tank body's scene node and attach the tank turret to it
+	mTankTurretNode = mTankBodyNode->createChildSceneNode();
+	mTankTurretNode->attachObject(tankTurret);
+	// Move it above tank body
+	mTankTurretNode->translate(0, 3, 0);
+
+	// Create a child scene node from tank turret's scene node and attach the tank barrel to it
+	mTankBarrelNode = mTankTurretNode->createChildSceneNode();
+	mTankBarrelNode->attachObject(tankBarrel);
+	// Move it to the appropriate position on the turret
+	mTankBarrelNode->translate(-30, 10, 0);
+
+	Tank tank;
+	tank.mTankBarrelNode = mTankBarrelNode;
+	tank.mTankTurretNode = mTankTurretNode;
+	tank.mTankBodyNode = mTankBodyNode;
+	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
+	tank.mCameraHolder->translate(-50, -100, 50);
+
+	mTanks.push_back(tank);
+
+	tankCounter++;
+
+	return true;
+}
  
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN
