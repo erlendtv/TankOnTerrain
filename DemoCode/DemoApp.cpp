@@ -125,8 +125,11 @@ void DemoApp::configureTerrainDefaults(Ogre::Light* light)
 //-------------------------------------------------------------------------------------
 void DemoApp::createScene(void)
 {
-    mCamera->setPosition(Ogre::Vector3(1800, currentZoom, 1800));
-    mCamera->lookAt(Ogre::Vector3(1800, 100, 1800));
+	// Init GODMODE camera holder
+	mGodCameraHolder = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+	mGodCameraHolder->setPosition(Ogre::Vector3(1800,currentZoom, 1800));
+	mGodCameraHolder->attachObject(mCamera);
+	mCamera->lookAt(Ogre::Vector3(1800,0,1800));
     mCamera->setNearClipDistance(0.1);
     mCamera->setFarClipDistance(50000);
  
@@ -378,32 +381,31 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	// CAMERA ATTACHED TO OBJECT?
 	if(cameraAttachedToNode){
 		Ogre::Vector3 point = mTankBodyNode->getPosition();
+		mGodCameraHolder->setPosition(point.x + currentZoom, point.y + currentZoom, point.z + currentZoom);
 		mCamera->lookAt(point);
-		mCamera->setPosition(point.x + currentZoom, point.y + currentZoom, point.z + currentZoom);
 	} else {
 		// FIND HEIGHT FOR CAMERA AT NEW POSITION
-		Ogre::Vector3 oldPos = mCamera->getPosition();
+		Ogre::Vector3 oldPos = mGodCameraHolder->getPosition();
 		float heightAtNew = 0;
 		
 		if(mMouse->getMouseState().X.abs > (mWindow->getWidth() - 20)){
 			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x + 10, 0, oldPos.z);
-			mCamera->setPosition(oldPos.x + 10,heightAtNew + currentZoom, oldPos.z);
+			mGodCameraHolder->setPosition(oldPos.x + 10,heightAtNew + currentZoom, oldPos.z);
 		}
 		else if(mMouse->getMouseState().X.abs < 20){
 			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x - 10, 0, oldPos.z);
-			mCamera->setPosition(oldPos.x - 10, heightAtNew + currentZoom, oldPos.z);
+			mGodCameraHolder->setPosition(oldPos.x - 10, heightAtNew + currentZoom, oldPos.z);
 		}
 		else if(mMouse->getMouseState().Y.abs > (mWindow->getHeight() - 20)){
 			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x, 0, oldPos.z + 10);
-			mCamera->setPosition(oldPos.x,heightAtNew + currentZoom, oldPos.z + 10);
+			mGodCameraHolder->setPosition(oldPos.x,heightAtNew + currentZoom, oldPos.z + 10);
 		}
 		else if(mMouse->getMouseState().Y.abs < 20){
 			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x, 0, oldPos.z - 10);
-			mCamera->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z - 10);
+			mGodCameraHolder->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z - 10);
 		}
 	}
 	
-
 	return ret;
 }
 
