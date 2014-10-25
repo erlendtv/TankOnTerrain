@@ -366,10 +366,10 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		}
 		else if(mMouse->getMouseState().Y.abs < 20){
 			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x, 0, oldPos.z - 10);
-			mCamera->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z - 10);
+			mGodCameraHolder->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z - 10);
 		} else {
 			heightAtNew = mTerrain->getHeightAtWorldPosition(oldPos.x, 0, oldPos.z);
-			mCamera->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z);
+			mGodCameraHolder->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z);
 		}
 
 	}
@@ -391,6 +391,9 @@ void DemoApp::selectTank(){
 	// If hit a movable object
 	if(itr != result.end() && itr->movable && itr->movable->getName() != "water" ){
 		cameraAttachedToNode = true;
+		if(mCamera->isAttached()){
+			mCamera->detachFromParent();
+		}
 		mTanks.at(0).mCameraHolder->attachObject(mCamera);
 	}			
 }
@@ -592,7 +595,7 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mTankTurretNode = mTankTurretNode;
 	tank.mTankBodyNode = mTankBodyNode;
 	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
-	tank.mCameraHolder->translate(-50, -100, 50);
+	tank.mCameraHolder->translate(Ogre::Vector3(300,300,0));
 
 	mTanks.push_back(tank);
 
