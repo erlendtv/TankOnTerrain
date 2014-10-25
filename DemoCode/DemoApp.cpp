@@ -419,10 +419,8 @@ void DemoApp::selectTank(){
 	Ogre::RaySceneQueryResult &result = mRaySceneQuery->execute();
 	Ogre::RaySceneQueryResult::iterator itr = result.begin();
 	// If hit a movable object
-	if(itr != result.end() && itr->movable){
-		if(itr->movable->getName() == "chbody1"){
+	if(itr != result.end() && itr->movable && itr->movable->getName() != "water" ){
 		cameraAttachedToNode = true;
-		}
 	}			
 }
 
