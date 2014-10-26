@@ -21,6 +21,7 @@ DemoApp::DemoApp(void)
 	tankTurretRotFactor = 1;
 	tankBarrelRotFactor = 1;
 	tankCounter = 1;
+	isTankSelected = false;
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
@@ -316,37 +317,20 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	// Orientate the tank
 	mTankNode->setOrientation(Ogre::Quaternion(forward, normal, right));
 */
+	// Move tank?
+	//if (isTankSelected)
+	//{
+		//selectedTank->frameRenderingQueued(evt, mTerrain);
+	//}
+	mTanks.at(0).frameRenderingQueued(evt);
 
-//////////////////////////////////////////////////////////////////////////////////
-	// Smoothened the change in orientation by a certain weightage each frame
-	float weight = 0.0001;  // Weight of the new normal
-
-	// Get current orientation and local y direction
-	Ogre::Quaternion currentOrientation = mTankBodyNode->getOrientation();
-	Ogre::Vector3 localY = currentOrientation.yAxis();
-
-	// Compute a small amount to rotate based on weight
-	Ogre::Vector3 newNormal = localY * ( 1 - weight ) + normal * weight;
-
-	// Calculate the angle to rotate
-	Ogre::Radian inclinationAngle = Ogre::Math::ACos(localY.dotProduct(newNormal));
-
-	// If angle is not 0
-	if(inclinationAngle.valueRadians() != 0.0f)
-	{
-		// Get rotation quaternion
-		Ogre::Vector3 inclinationAxis = ( localY.crossProduct( newNormal) ).normalisedCopy();
-		Ogre::Quaternion inclination = Ogre::Quaternion(inclinationAngle, inclinationAxis);
-
-		// Orientate entity based on rotation quaternion
-		mTankBodyNode->setOrientation( inclination * currentOrientation );
-	}
 //////////////////////////////////////////////////////////////////////////////////
 	
 	// CAMERA ATTACHED TO OBJECT?
 	if(cameraAttachedToNode){
 		Ogre::Vector3 point = mTankBodyNode->getPosition();
 		mGodCameraHolder->setPosition(point.x, point.y + currentZoom, point.z);
+		point.y = point.y + 100;
 		mCamera->lookAt(point);
 	} else {
 		// FIND HEIGHT FOR CAMERA AT NEW POSITION
@@ -393,8 +377,10 @@ void DemoApp::selectTank(){
 		cameraAttachedToNode = true;
 		if(mCamera->isAttached()){
 			mCamera->detachFromParent();
-			mTanks.at(0).mCameraHolder->attachObject(mCamera);
 		}
+		mTanks.at(0).mCameraHolder->attachObject(mCamera);
+		selectedTank = &mTanks.at(0);
+		isTankSelected = true;
 	}			
 }
 
@@ -413,40 +399,11 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyPressed(arg);
 
+	if (selectedTank != nullptr)
+		selectedTank->keyPressed(arg);
+
     switch (arg.key)
-	{
-		case OIS::KC_I:
-			mMove -= tankBodyMoveFactor;
-			break;
-
-		case OIS::KC_K:
-			mMove += tankBodyMoveFactor;
-			break;
-
-		case OIS::KC_J:
-			mBodyRotate += tankBodyRotFactor;
-			break;
-
-		case OIS::KC_L:
-			mBodyRotate -= tankBodyRotFactor;
-			break;
-
-		case OIS::KC_LEFT:
-			mTurretRotate += tankTurretRotFactor;
-			break;
- 
-		case OIS::KC_RIGHT:
-			mTurretRotate -= tankTurretRotFactor;
-			break;
-
-		case OIS::KC_UP:
-			mBarrelRotate += tankBarrelRotFactor;
-			break;
- 
-		case OIS::KC_DOWN:
-			mBarrelRotate -= tankBarrelRotFactor;
-			break;
- 
+	{ 
 		case OIS::KC_ESCAPE: 
 			mShutDown = true;
 			break;
@@ -463,39 +420,11 @@ bool DemoApp::keyReleased( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyReleased(arg);
 
+	if (selectedTank != nullptr)
+		selectedTank->keyRealesed(arg);
+
 	switch (arg.key)
 	{
-		case OIS::KC_I:
-			mMove += tankBodyMoveFactor;
-			break;
-
-		case OIS::KC_K:
-			mMove -= tankBodyMoveFactor;
-			break;
-
-		case OIS::KC_J:
-			mBodyRotate -= tankBodyRotFactor;
-			break;
-
-		case OIS::KC_L:
-			mBodyRotate += tankBodyRotFactor;
-			break;
-
-		case OIS::KC_LEFT:
-			mTurretRotate -= tankTurretRotFactor;
-			break;
- 
-		case OIS::KC_RIGHT:
-			mTurretRotate += tankTurretRotFactor;
-			break;
-
-		case OIS::KC_UP:
-			mBarrelRotate -= tankBarrelRotFactor;
-			break;
- 
-		case OIS::KC_DOWN:
-			mBarrelRotate += tankBarrelRotFactor;
-			break;
 		default:
 			break;
 	}
@@ -595,7 +524,8 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mTankTurretNode = mTankTurretNode;
 	tank.mTankBodyNode = mTankBodyNode;
 	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
-	tank.mCameraHolder->translate(Ogre::Vector3(300,300,0));
+	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
+	tank.mTerrain = mTerrain;
 
 	mTanks.push_back(tank);
 

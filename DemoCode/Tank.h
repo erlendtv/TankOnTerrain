@@ -7,6 +7,7 @@ public:
 
 	bool keyRealesed(const OIS::KeyEvent &arg);
 	bool keyPressed(const OIS::KeyEvent &arg);
+	bool frameRenderingQueued(const Ogre::FrameEvent& evts);
 
 	/* tank nodes */
 	Ogre::SceneNode* mTankBodyNode;
@@ -14,8 +15,10 @@ public:
 	Ogre::SceneNode* mTankBarrelNode;
 	Ogre::SceneNode* mCameraHolder;
 	
-	Ogre::Vector3 getTankForwardDirection(Tank tank);
-	Ogre::Vector3 getTurretForwardDirection(Tank tank);
+	Ogre::Vector3 getTankForwardDirection();
+	Ogre::Vector3 getTurretForwardDirection();
+
+	Ogre::Terrain* mTerrain;
 
 private:
 

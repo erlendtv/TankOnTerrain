@@ -51,9 +51,10 @@ private:
 	float mHeightOffset;
 
 	// Select object
-	Tank selectedTank;
+	Tank* selectedTank;
 	void selectTank();
 	int tankCounter;
+	bool isTankSelected;
 	
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
