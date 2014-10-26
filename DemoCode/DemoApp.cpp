@@ -205,7 +205,7 @@ void DemoApp::createScene(void)
  
     //mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8, 500);
     mSceneMgr->setSkyPlane(true, plane, "Examples/CloudySky", 500, 20, true, 0.5, 150, 150);
-
+	
 	addNewTank(Ogre::Vector3(1800, 0, 1800));
 
 	// Water
@@ -587,7 +587,7 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	mTankBarrelNode->attachObject(tankBarrel);
 	// Move it to the appropriate position on the turret
 	mTankBarrelNode->translate(-30, 10, 0);
-
+	
 	Tank tank;
 	tank.mTankBarrelNode = mTankBarrelNode;
 	tank.mTankTurretNode = mTankTurretNode;
@@ -595,6 +595,16 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
 	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
 	tank.mTerrain = mTerrain;
+
+	
+	// Add physics to tank
+	btCollisionShape* collisionShape = new btBoxShape(btVector3(200,200,200));
+	btTransform startingTrans;
+	startingTrans.setIdentity();
+	startingTrans.setOrigin(convert(tank.mTankBodyNode->getPosition()));
+	startingTrans.setRotation(btQuaternion(0,0,0,1));
+	btRigidBody* rigidBody = mPhysicsEngine->createRigidBody(15000,startingTrans,collisionShape,tank.mTankBodyNode);
+	rigidBody->setGravity(btVector3(0,0,0));
 
 	mTanks.push_back(tank);
 

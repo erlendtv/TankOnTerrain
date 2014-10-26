@@ -32,7 +32,9 @@ private:
 	// Camera attached to object?
 	bool cameraAttachedToNode;
 	
+	// TESTING
 	Ogre::ManualObject* mNormalLine;
+	// TESTING
 	
 	// Scene nodes for the different tank parts
 	Ogre::SceneNode* mTankBodyNode;
