@@ -5,6 +5,7 @@
 #include "BaseApplication.h"
 #include "Tank.h"
 #include <vector>
+#include "PhysicsEngine.h"
 
 enum zoom_level {ZOOM1 = 500, ZOOM2 = 750, ZOOM3 = 1000, ZOOM4 = 1250, ZOOM5 = 1500};
 
@@ -17,6 +18,10 @@ private:
     Ogre::TerrainGroup* mTerrainGroup;
     bool mTerrainsImported;
     OgreBites::Label* mInfoLabel;
+
+	// Physics
+	PhysicsEngine* mPhysicsEngine;
+	int mBoxCount;
  
     void defineTerrain(long x, long y);
     void initBlendMaps(Ogre::Terrain* terrain);
@@ -76,6 +81,9 @@ protected:
     virtual bool keyReleased( const OIS::KeyEvent &arg );
 	virtual bool mouseMoved( const OIS::MouseEvent &arg );
 	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
+	void shootBox(const btVector3& position, const btQuaternion& orientation, const btVector3& linearVelocity);
+
 };
- 
+
+
 #endif // #ifndef __DemoApp_h_

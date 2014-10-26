@@ -22,10 +22,18 @@ DemoApp::DemoApp(void)
 	tankBarrelRotFactor = 1;
 	tankCounter = 1;
 	isTankSelected = false;
+
+	mPhysicsEngine = new PhysicsEngine();
+	mPhysicsEngine->initPhysics();
+	mBoxCount = 0;
+
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
 {
+	if(mPhysicsEngine){
+		delete mPhysicsEngine;
+	}
 }
 //-------------------------------------------------------------------------------------
 void DemoApp::destroyScene(void)
@@ -182,6 +190,10 @@ void DemoApp::createScene(void)
     }
  
     mTerrainGroup->freeTemporaryResources();
+
+	// Add physics to terrain
+	Ogre::Terrain* terrain = mTerrainGroup->getTerrain(0,0);
+	mPhysicsEngine->createTerrainData(terrain->getHeightData(), terrain->getSize(), terrain->getWorldSize()/terrain->getSize());
  
     Ogre::ColourValue fadeColour(0.9, 0.9, 0.9);
     mSceneMgr->setFog(Ogre::FOG_LINEAR, fadeColour, 0.0, 10, 1200);
@@ -220,6 +232,7 @@ void DemoApp::createScene(void)
 	waterNode->attachObject(pWaterEntity);
 	waterNode->translate(-1000, 200, -1000);
 }
+
 //-------------------------------------------------------------------------------------
 void DemoApp::createFrameListener(void)
 {
@@ -255,6 +268,8 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
             mTerrainsImported = false;
         }
     }
+	// Update physics simulation
+	mPhysicsEngine->update(evt.timeSinceLastFrame);
 
 	// Move and rotate the tank
 	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
@@ -389,10 +404,64 @@ bool DemoApp::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id ){
 	case OIS::MB_Left:
 		selectTank();
 		break;
+	case OIS::MB_Right:
+				// Get the mouse ray, i.e. ray from the mouse cursor 'into' the screen 
+				Ogre::Ray mouseRay = mCamera->getCameraToViewportRay(
+					static_cast<float>(mMouse->getMouseState().X.abs)/mMouse->getMouseState().width, 
+					static_cast<float>(mMouse->getMouseState().Y.abs)/mMouse->getMouseState().height);
+
+				// Get a point one unit from the mouse ray origin, in the direction of the ray
+				Ogre::Vector3 destination = mouseRay.getPoint(1);
+				
+				// Calculate the direction for the linear velocity
+				btVector3 linearVelocity(
+					destination.x-mouseRay.getOrigin().x, 
+					destination.y-mouseRay.getOrigin().y, 
+					destination.z-mouseRay.getOrigin().z);
+				
+				linearVelocity.normalize();
+				// Scale to appropriate velocity
+				linearVelocity *= 50.0f;
+
+				// Create and shoot the box
+				shootBox(convert(mouseRay.getOrigin()), btQuaternion(0,0,0,1), linearVelocity);
+		break;
 	}
 	return true;
 }
 
+void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientation, const btVector3& linearVelocity)
+{
+	// Create unique name
+	std::ostringstream oss;
+	oss << mBoxCount;
+	std::string entityName = "Cube" + oss.str();
+	// Increment box count
+	mBoxCount++;
+		
+	// Create cube mesh with unique name
+	Ogre::Entity* cube = mSceneMgr->createEntity(entityName, "cube.mesh");
+	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+	node->attachObject(cube);
+	// Scale it to appropriate size
+	node->scale(0.05, 0.05, 0.05);
+
+	// Create a collision shape
+	// Note that the size should match the size of the object that will be displayed
+	btCollisionShape* collisionShape = new btBoxShape(btVector3(2.5, 2.5, 2.5));
+
+	// The object's starting transformation
+	btTransform startingTrans;
+	startingTrans.setIdentity();
+	startingTrans.setOrigin(position);
+	startingTrans.setRotation(orientation);
+
+	// Create the rigid body
+	btRigidBody* rigidBody = mPhysicsEngine->createRigidBody(1.0f, startingTrans, collisionShape, node);
+
+	// Give the rigid body an initial velocity
+	rigidBody->setLinearVelocity(linearVelocity);
+} 
  
 // OIS::KeyListener
 bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
