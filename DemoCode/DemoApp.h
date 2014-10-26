@@ -3,6 +3,10 @@
  
 #include "stdafx.h"
 #include "BaseApplication.h"
+#include "Tank.h"
+#include <vector>
+
+using namespace std;
  
 class DemoApp : public BaseApplication
 {
@@ -28,6 +32,9 @@ private:
 	float mMove;
 	float mBodyRotate;
 	float mHeightOffset;
+	
+	// The tanks
+	std::vector<Tank> mTanks;    // declares a vector of tanks
 
 public:
     DemoApp(void);
