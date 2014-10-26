@@ -269,8 +269,6 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
             mTerrainsImported = false;
         }
     }
-	// Update physics simulation
-	mPhysicsEngine->update(evt.timeSinceLastFrame);
 
 	// Move and rotate the tank
 	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
@@ -376,6 +374,9 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		}
 
 	}
+	// Update physics simulation
+	mPhysicsEngine->update(evt.timeSinceLastFrame);
+
 	return ret;
 }
 
@@ -649,23 +650,23 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
 	tank.mTerrain = mTerrain;
 	tank.setTankStateToAI(true);
-
-
 	
-	// Add physics to tank
-	btCollisionShape* collisionShape = new btBoxShape(btVector3(200,200,200));
-	btTransform startingTrans;
-	startingTrans.setIdentity();
-	startingTrans.setOrigin(convert(tank.mTankBodyNode->getPosition()));
-	startingTrans.setRotation(btQuaternion(0,0,0,1));
-	btRigidBody* rigidBody = mPhysicsEngine->createRigidBody(15000,startingTrans,collisionShape,tank.mTankBodyNode);
-	rigidBody->setGravity(btVector3(0,0,0));
-
-	mTanks.push_back(tank);
+	mTanks.push_back(tank)
 
 	tankCounter++;
 
 	return true;
+}
+
+void DemoApp::checkProjectileCollision(){
+	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
+		Ogre::AxisAlignedBox tankBox = iTank->getBoundingBox();
+		for(std::vector<Ogre::AxisAlignedBox>::iterator iProj = projectileBoxes.begin(); iProj != projectileBoxes.end(); ++iProj){
+			if(tankBox.contains(*iProj)){
+				delete &*iTank;
+			}
+		}
+	}
 }
  
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32

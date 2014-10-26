@@ -72,6 +72,10 @@ private:
 	// Current camera zoom
 	Ogre::Vector3 camHeightAtPos;
 	zoom_level currentZoom;
+
+	// Collision detection
+	std::vector<Ogre::AxisAlignedBox> projectileBoxes;
+
 public:
     DemoApp(void);
     virtual ~DemoApp(void);
@@ -86,6 +90,7 @@ protected:
 	virtual bool mouseMoved( const OIS::MouseEvent &arg );
 	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
 	void shootBox(const btVector3& position, const btQuaternion& orientation, const btVector3& linearVelocity);
+	void checkProjectileCollision();
 
 };
 
