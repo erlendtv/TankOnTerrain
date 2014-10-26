@@ -13,6 +13,9 @@ public:
 	Ogre::SceneNode* mTankTurretNode;
 	Ogre::SceneNode* mTankBarrelNode;
 	Ogre::SceneNode* mCameraHolder;
+	
+	Ogre::Vector3 getTankForwardDirection(Tank tank);
+	Ogre::Vector3 getTurretForwardDirection(Tank tank);
 
 private:
 
@@ -27,6 +30,7 @@ private:
 	float mTankBodyRotFactor;
 	float mTankTurretRotFactor;
 	float mTankBarrelPitchFactor;
+	
 
 };
 
