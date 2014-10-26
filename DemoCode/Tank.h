@@ -8,13 +8,13 @@ public:
 	bool keyRealesed(const OIS::KeyEvent &arg);
 	bool keyPressed(const OIS::KeyEvent &arg);
 
-private:
-
 	/* tank nodes */
 	Ogre::SceneNode* mTankBodyNode;
 	Ogre::SceneNode* mTankTurretNode;
 	Ogre::SceneNode* mTankBarrelNode;
 	Ogre::SceneNode* mCameraHolder;
+
+private:
 
 	/* tank movement variables */
 	float mMove;
@@ -27,7 +27,6 @@ private:
 	float mTankBodyRotFactor;
 	float mTankTurretRotFactor;
 	float mTankBarrelPitchFactor;
-
 
 };
 
