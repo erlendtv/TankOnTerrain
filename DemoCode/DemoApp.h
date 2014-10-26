@@ -21,21 +21,36 @@ private:
     void configureTerrainDefaults(Ogre::Light* light);
 
 	Ogre::Terrain* mTerrain;
+
+	// Camera attached to object?
+	bool cameraAttachedToNode;
 	
 	Ogre::ManualObject* mNormalLine;
 	
-	// Scene nodes for the tank
-	Ogre::SceneNode* mTankNode;
-	Ogre::Entity* mTankEntity;
+	// Scene nodes for the different tank parts
+	Ogre::SceneNode* mTankBodyNode;
+	Ogre::SceneNode* mTankTurretNode;
+	Ogre::SceneNode* mTankBarrelNode;
 
+	// Constants
+	float tankBodyMoveFactor;
+	float tankBodyRotFactor;
+	float tankTurretRotFactor;
+	float tankBarrelRotFactor;
 	// For tank movement and rotation
 	float mMove;
 	float mBodyRotate;
+	float mTurretRotate;
+	float mBarrelRotate;
+	float mBarrelPitch;
 	float mHeightOffset;
 	
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
 
+	// Current camera zoom
+	Ogre::Vector3 camHeightAtPos;
+	float currentZoom;
 public:
     DemoApp(void);
     virtual ~DemoApp(void);
