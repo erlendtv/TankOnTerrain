@@ -218,6 +218,12 @@ void DemoApp::createScene(void)
 	mSceneMgr->getRootSceneNode()->createChildSceneNode("WaterNode");
 	waterNode->attachObject(pWaterEntity);
 	waterNode->translate(-1000, 200, -1000);
+
+	// TESTING PURPOSE
+	// Create a manual object to show the normal vector
+	mNormalLine = mSceneMgr->createManualObject("Normal Vector");
+	mNormalLine->clear();
+	mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(mNormalLine);
 }
 //-------------------------------------------------------------------------------------
 void DemoApp::createFrameListener(void)
@@ -394,7 +400,31 @@ void DemoApp::selectTank(){
 		if(mCamera->isAttached()){
 			mCamera->detachFromParent();
 		}
-		mTanks.at(0).mCameraHolder->attachObject(mCamera);
+		selectedTank = mTanks.at(0);
+		selectedTank.mCameraHolder->attachObject(mCamera);
+		Ogre::Quaternion selectedOrientation = selectedTank.mTankTurretNode->getOrientation();
+		Ogre::Vector3 localX = selectedTank.mTankBodyNode->getPosition() + selectedOrientation.xAxis();
+		localX.y = mTerrain->getHeightAtWorldPosition(localX);
+		localX -= selectedTank.mTankBodyNode->getPosition();
+		Ogre::Vector3 nLocalZ = selectedTank.mTankBodyNode->getPosition() - selectedOrientation.zAxis();
+		nLocalZ.y = mTerrain->getHeightAtWorldPosition(nLocalZ);
+		nLocalZ -= selectedTank.mTankBodyNode->getPosition();
+		Ogre::Vector3 normal = localX.crossProduct(nLocalZ);
+		normal.normalise();
+		// FOR TESTING
+	// Update the normal vector's display
+	mNormalLine->clear();
+	// Specify the material and rendering type
+	mNormalLine->begin("BaseWhiteNoLighting", Ogre::RenderOperation::OT_LINE_STRIP);
+
+	mNormalLine->position(selectedTank.mTankBodyNode->getPosition());
+	mNormalLine->colour(1, 0, 0);
+	mNormalLine->position(selectedTank.mTankBodyNode->getPosition() + normal*50);
+	mNormalLine->colour(1, 0, 0);
+
+	// Finished defining line
+	mNormalLine->end();
+
 	}			
 }
 
