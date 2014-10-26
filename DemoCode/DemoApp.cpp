@@ -25,7 +25,7 @@ void DemoApp::destroyScene(void)
 //-------------------------------------------------------------------------------------
 void getTerrainImage(bool flipX, bool flipY, Ogre::Image& img)
 {
-    img.load("terrain.png", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    img.load("terrainTest.png", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     if (flipX)
         img.flipAroundY();
     if (flipY)
@@ -98,7 +98,7 @@ void DemoApp::configureTerrainDefaults(Ogre::Light* light)
     Ogre::Terrain::ImportData& defaultimp = mTerrainGroup->getDefaultImportSettings();
     defaultimp.terrainSize = 513;
     defaultimp.worldSize = 12000.0f;
-    defaultimp.inputScale = 600;
+    defaultimp.inputScale = 1200;
     defaultimp.minBatchSize = 33;
     defaultimp.maxBatchSize = 65;
     // textures
@@ -116,7 +116,7 @@ void DemoApp::configureTerrainDefaults(Ogre::Light* light)
 //-------------------------------------------------------------------------------------
 void DemoApp::createScene(void)
 {
-    mCamera->setPosition(Ogre::Vector3(1683, 50, 2116));
+    mCamera->setPosition(Ogre::Vector3(1683, 500, 2116));
     mCamera->lookAt(Ogre::Vector3(1963, 50, 1660));
     mCamera->setNearClipDistance(0.1);
     mCamera->setFarClipDistance(50000);
@@ -202,6 +202,29 @@ void DemoApp::createScene(void)
 	mNormalLine->clear();
 	mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(mNormalLine);
 
+	// Water
+	Ogre::Entity *pWaterEntity;
+	Ogre::Plane nWaterPlane;
+ 
+	// create a water plane/scene node
+	nWaterPlane.normal = Ogre::Vector3::UNIT_Y;
+	nWaterPlane.d = -1.5;
+	Ogre::MeshManager::getSingleton().createPlane(
+		"WaterPlane",
+		Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+		nWaterPlane,
+		14000, 14000,
+		20, 20,
+		true, 1,
+		10, 10,
+		Ogre::Vector3::UNIT_Z);
+
+	pWaterEntity = mSceneMgr->createEntity("water", "WaterPlane");
+	pWaterEntity->setMaterialName("Examples/TextureEffect4");
+	Ogre::SceneNode *waterNode =
+	mSceneMgr->getRootSceneNode()->createChildSceneNode("WaterNode");
+	waterNode->attachObject(pWaterEntity);
+	waterNode->translate(-1000, 200, -1000);
 }
 //-------------------------------------------------------------------------------------
 void DemoApp::createFrameListener(void)
