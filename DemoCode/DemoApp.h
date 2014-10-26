@@ -51,7 +51,7 @@ private:
 	float mHeightOffset;
 
 	// Select object
-	Ogre::SceneNode* selectedTankNode;
+	Tank selectedTank;
 	void selectTank();
 	int tankCounter;
 	

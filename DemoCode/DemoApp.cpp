@@ -413,40 +413,10 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyPressed(arg);
 
+	selectedTank.keyPressed(arg);
+
     switch (arg.key)
-	{
-		case OIS::KC_I:
-			mMove -= tankBodyMoveFactor;
-			break;
-
-		case OIS::KC_K:
-			mMove += tankBodyMoveFactor;
-			break;
-
-		case OIS::KC_J:
-			mBodyRotate += tankBodyRotFactor;
-			break;
-
-		case OIS::KC_L:
-			mBodyRotate -= tankBodyRotFactor;
-			break;
-
-		case OIS::KC_LEFT:
-			mTurretRotate += tankTurretRotFactor;
-			break;
- 
-		case OIS::KC_RIGHT:
-			mTurretRotate -= tankTurretRotFactor;
-			break;
-
-		case OIS::KC_UP:
-			mBarrelRotate += tankBarrelRotFactor;
-			break;
- 
-		case OIS::KC_DOWN:
-			mBarrelRotate -= tankBarrelRotFactor;
-			break;
- 
+	{ 
 		case OIS::KC_ESCAPE: 
 			mShutDown = true;
 			break;
@@ -463,39 +433,10 @@ bool DemoApp::keyReleased( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyReleased(arg);
 
+	selectedTank.keyRealesed(arg);
+
 	switch (arg.key)
 	{
-		case OIS::KC_I:
-			mMove += tankBodyMoveFactor;
-			break;
-
-		case OIS::KC_K:
-			mMove -= tankBodyMoveFactor;
-			break;
-
-		case OIS::KC_J:
-			mBodyRotate -= tankBodyRotFactor;
-			break;
-
-		case OIS::KC_L:
-			mBodyRotate += tankBodyRotFactor;
-			break;
-
-		case OIS::KC_LEFT:
-			mTurretRotate -= tankTurretRotFactor;
-			break;
- 
-		case OIS::KC_RIGHT:
-			mTurretRotate += tankTurretRotFactor;
-			break;
-
-		case OIS::KC_UP:
-			mBarrelRotate -= tankBarrelRotFactor;
-			break;
- 
-		case OIS::KC_DOWN:
-			mBarrelRotate += tankBarrelRotFactor;
-			break;
 		default:
 			break;
 	}
