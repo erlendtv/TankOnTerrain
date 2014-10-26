@@ -124,7 +124,7 @@ void BaseApplication::createFrameListener(void)
     mTrayMgr = new OgreBites::SdkTrayManager("InterfaceName", mWindow, mInputContext, this);
 	mTrayMgr->showFrameStats(OgreBites::TL_BOTTOMLEFT);
 	mTrayMgr->showLogo(OgreBites::TL_BOTTOMRIGHT);
-	mTrayMgr->hideCursor();
+	//mTrayMgr->hideCursor();
  
 	// create a params panel for displaying sample details
 	Ogre::StringVector items;

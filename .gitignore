@@ -1,5 +1,8 @@
 # Created by https://www.gitignore.io
 
+# Spesific TankOnTerrain
+DemoCode/media/
+
 ### C++ ###
 # Compiled Object files
 *.slo
@@ -224,7 +227,8 @@ FakesAssemblies/
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*

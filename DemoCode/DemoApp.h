@@ -34,6 +34,9 @@ private:
 	Ogre::SceneNode* mTankTurretNode;
 	Ogre::SceneNode* mTankBarrelNode;
 
+	// "Godmode" node to hold camera
+	Ogre::SceneNode* mGodCameraHolder;
+
 	// Constants
 	float tankBodyMoveFactor;
 	float tankBodyRotFactor;
@@ -46,6 +49,10 @@ private:
 	float mBarrelRotate;
 	float mBarrelPitch;
 	float mHeightOffset;
+
+	// Select object
+	Ogre::SceneNode* selectedTankNode;
+	void selectTank();
 	
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
@@ -66,6 +73,7 @@ protected:
     virtual bool keyPressed( const OIS::KeyEvent &arg );
     virtual bool keyReleased( const OIS::KeyEvent &arg );
 	virtual bool mouseMoved( const OIS::MouseEvent &arg );
+	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
 };
  
 #endif // #ifndef __DemoApp_h_
