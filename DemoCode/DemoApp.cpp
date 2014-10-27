@@ -1,5 +1,11 @@
 #include "stdafx.h"
 #include "DemoApp.h"
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <io.h>
+#include <iostream>
+#include <string>
  
 //-------------------------------------------------------------------------------------
 DemoApp::DemoApp(void)
@@ -27,6 +33,8 @@ DemoApp::DemoApp(void)
 	mPhysicsEngine = new PhysicsEngine();
 	mPhysicsEngine->initPhysics();
 	mBoxCount = 0;
+
+	cout << "TESTTESTETSTET";
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
@@ -34,6 +42,7 @@ DemoApp::~DemoApp(void)
 	if(mPhysicsEngine){
 		delete mPhysicsEngine;
 	}
+	mSceneMgr->destroyQuery(mRaySceneQuery);
 }
 //-------------------------------------------------------------------------------------
 void DemoApp::destroyScene(void)
@@ -220,7 +229,7 @@ void DemoApp::createScene(void)
 		"WaterPlane",
 		Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
 		nWaterPlane,
-		14000, 14000,
+		12000, 12000,
 		20, 20,
 		true, 1,
 		10, 10,
@@ -231,7 +240,7 @@ void DemoApp::createScene(void)
 	Ogre::SceneNode *waterNode =
 	mSceneMgr->getRootSceneNode()->createChildSceneNode("WaterNode");
 	waterNode->attachObject(pWaterEntity);
-	waterNode->translate(-1000, 200, -1000);
+	waterNode->translate(0, 200, 0);
 }
 
 //-------------------------------------------------------------------------------------
@@ -240,6 +249,8 @@ void DemoApp::createFrameListener(void)
     BaseApplication::createFrameListener();
  
     mInfoLabel = mTrayMgr->createLabel(OgreBites::TL_TOP, "TInfo", "", 350);
+
+	mRaySceneQuery = mSceneMgr->createRayQuery(Ogre::Ray());
 }
 //-------------------------------------------------------------------------------------
 bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -364,7 +375,9 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	mPhysicsEngine->update(evt.timeSinceLastFrame);
 
+
 	checkProjectileCollision();
+
 
 	return ret;
 }
@@ -462,19 +475,19 @@ void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientatio
 	// Create cube mesh with unique name
 	Ogre::Entity* cube = mSceneMgr->createEntity(entityName, "cube.mesh");
 	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-
 	node->showBoundingBox(true);
-	
-	//Ogre::AxisAlignedBox boxRef = cube->getBoundingBox();
+	projectiles.push_back(node);
 	
 	
 	node->attachObject(cube);
 	// Scale it to appropriate size
-	node->scale(0.05, 0.05, 0.05);
+	node->scale(0.1, 0.1, 0.1);
+	node->showBoundingBox(true);
+	projectiles.push_back(node);
 
 	// Create a collision shape
 	// Note that the size should match the size of the object that will be displayed
-	btCollisionShape* collisionShape = new btBoxShape(btVector3(2.5, 2.5, 2.5));
+	btCollisionShape* collisionShape = new btBoxShape(btVector3(5, 5, 5));
 
 	// The object's starting transformation
 	btTransform startingTrans;
@@ -487,7 +500,6 @@ void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientatio
 
 	// Give the rigid body an initial velocity
 	rigidBody->setLinearVelocity(linearVelocity);
-	projectileBoxes.push_back(cube->getWorldBoundingBox());
 
 } 
  
@@ -637,6 +649,11 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	mTankBarrelNode->attachObject(tankBarrel);
 	// Move it to the appropriate position on the turret
 	mTankBarrelNode->translate(-30, 10, 0);
+	mTankBarrelNode->showBoundingBox(true);
+
+	mProjectileSpawnNode = mTankBarrelNode->createChildSceneNode();
+	mProjectileSpawnNode->translate(-100,0,0);
+	mProjectileSpawnNode->showBoundingBox(true);
 
 	Tank tank(tankCounter);
 
@@ -646,8 +663,14 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
 	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
 	tank.mTerrain = mTerrain;
+	tank.mPhysicsEngine = mPhysicsEngine;
+	tank.mSceneMgr = mSceneMgr;
+	tank.mBoxCount = mBoxCount;
+	tank.projectiles = projectiles;
+	tank.mProjectileSpawnNode = mProjectileSpawnNode;
+
 	tank.setTankStateToAI(true);
-	
+
 	tank.mTankBodyNode->showBoundingBox(true);
 
 	mTanks.push_back(tank);
@@ -659,19 +682,14 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 
 void DemoApp::checkProjectileCollision(){
 	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
-		Ogre::AxisAlignedBox bodyBox = iTank->mTankBodyNode->getAttachedObject(0)->getWorldBoundingBox();
-		for(std::vector<Ogre::AxisAlignedBox>::iterator iProj = projectileBoxes.begin(); iProj != projectileBoxes.end(); ++iProj){
-			if(bodyBox.contains(*iProj)){
-				mShutDown = true;
+		for(std::vector<Ogre::SceneNode*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
+			if(iTank->mTankBodyNode->_getDerivedPosition().distance((*it)->_getDerivedPosition()) < 50){
+				// TODO BULLET STUFF
 			}
-		}
+		}	
 	}
 }
 
-bool DemoApp::isColliding(Ogre::Vector3 one, Ogre::Vector3 two){
-	
-	return true;
-}
  
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -701,7 +719,6 @@ extern "C" {
                 e.getFullDescription().c_str() << std::endl;
 #endif
         }
- 
         return 0;
     }
  

@@ -7,7 +7,7 @@
 #include <vector>
 #include "PhysicsEngine.h"
 
-enum zoom_level {ZOOM1 = 500, ZOOM2 = 750, ZOOM3 = 1000, ZOOM4 = 1250, ZOOM5 = 1500};
+enum zoom_level {ZOOM1 = 500, ZOOM2 = 1000, ZOOM3 = 1500, ZOOM4 = 2000, ZOOM5 = 2500};
 
 using namespace std;
  
@@ -18,6 +18,7 @@ private:
     Ogre::TerrainGroup* mTerrainGroup;
     bool mTerrainsImported;
     OgreBites::Label* mInfoLabel;
+	Ogre::RaySceneQuery* mRaySceneQuery;
 
 	// Physics
 	PhysicsEngine* mPhysicsEngine;
@@ -40,6 +41,7 @@ private:
 	Ogre::SceneNode* mTankBodyNode;
 	Ogre::SceneNode* mTankTurretNode;
 	Ogre::SceneNode* mTankBarrelNode;
+	Ogre::SceneNode* mProjectileSpawnNode;
 
 	// "Godmode" node to hold camera
 	Ogre::SceneNode* mGodCameraHolder;
@@ -68,13 +70,11 @@ private:
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
 	bool addNewTank(const Ogre::Vector3 spawnPoint);
+	std::vector<Ogre::SceneNode*> projectiles;
 
 	// Current camera zoom
 	Ogre::Vector3 camHeightAtPos;
 	zoom_level currentZoom;
-
-	// Collision detection
-	std::vector<Ogre::AxisAlignedBox> projectileBoxes;
 
 	bool isColliding(Ogre::Vector3 one, Ogre::Vector3 two);
 

@@ -2,6 +2,7 @@
 #include "Tank.h"
 
 
+
 Tank::Tank(const int id)
 {
 	mMove = 0;
@@ -15,8 +16,13 @@ Tank::Tank(const int id)
 	mTankTurretRotFactor = 1;
 	mTankBarrelPitchFactor = 1;
 	mId = id;
-	tank_state = TANK_STATE_AI;
-	ui_state = AI_STATE_ROAMING;
+	//tank_state = TANK_STATE_AI;
+	tank_state = TANK_STATE_USER; // testing
+	ai_state = AI_STATE_ROAMING;
+	wander_turning180 = false;
+	wander_rotateCounter = 0;
+	wander_delayAfterTurning = false;
+	mProjectileInitVelocity = 25;
 }
 
 
@@ -71,7 +77,6 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 	{
 		case OIS::KC_I:
 			mMove -= mTankBodyMoveFactor;
-			//mRigidBody->applyForce(convert(mTankBodyNode->getOrientation() * Ogre::Vector3::NEGATIVE_UNIT_Z)*100, btVector3(0,0,0));
 			break;
 
 		case OIS::KC_K:
@@ -101,6 +106,9 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 		case OIS::KC_DOWN:
 			mBarrelRotate -= mTankBarrelPitchFactor;
 			break;
+		case OIS::KC_RSHIFT:
+			shootProjectile();
+			break;
 		default:
 			break;
 	}
@@ -111,49 +119,56 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 
 bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
+
+	if (tank_state == TANK_STATE_AI) {
+		if (ai_state == AI_STATE_ROAMING) {
+			tankWander();
+		}
+	}
+
 	// Move and rotate the tank
-	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
-	mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
+		mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
+		mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
 
-	// Get tank's current position
-	Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
-	// Move it above the ground
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition) + mHeightOffset;
-	mTankBodyNode->setPosition(tankPosition);
+		// Get tank's current position
+		Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
+		// Move it above the ground
+		tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition) + mHeightOffset;
+		mTankBodyNode->setPosition(tankPosition);
 
-	// Get current tank orientation
-	Ogre::Quaternion tankOrientation = mTankBodyNode->getOrientation();
+		// Get current tank orientation
+		Ogre::Quaternion tankOrientation = mTankBodyNode->getOrientation();
 
-	// Get point on ground where the tank is
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition);
+		// Get point on ground where the tank is
+		tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition);
 
-	// Get a vector pointing in the local x direction
-	Ogre::Vector3 v1 = tankPosition + tankOrientation.xAxis();
-	v1.y = mTerrain->getHeightAtWorldPosition(v1);
-	v1 -= tankPosition;
+		// Get a vector pointing in the local x direction
+		Ogre::Vector3 v1 = tankPosition + tankOrientation.xAxis();
+		v1.y = mTerrain->getHeightAtWorldPosition(v1);
+		v1 -= tankPosition;
 
-	// Get a vector pointing in the local -z direction
-	Ogre::Vector3 v2 = tankPosition - tankOrientation.zAxis();
-	v2.y = mTerrain->getHeightAtWorldPosition(v2);
-	v2 -= tankPosition;
+		// Get a vector pointing in the local -z direction
+		Ogre::Vector3 v2 = tankPosition - tankOrientation.zAxis();
+		v2.y = mTerrain->getHeightAtWorldPosition(v2);
+		v2 -= tankPosition;
 	
-	// Find the normal vector
-	Ogre::Vector3 normal = v1.crossProduct(v2);
-	normal.normalise();
+		// Find the normal vector
+		Ogre::Vector3 normal = v1.crossProduct(v2);
+		normal.normalise();
 
-	// Rotate the tank turret
-	mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
+		// Rotate the tank turret
+		mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
 
-	// Calculate the tank barrel's current pitch
-	mBarrelPitch += mBarrelRotate;
+		// Calculate the tank barrel's current pitch
+		mBarrelPitch += mBarrelRotate;
 
-	// Clamp tank barrel rotation between 0 and 30 degrees
-	if(mBarrelPitch > 30)
-		mBarrelPitch = 30;
-	else if(mBarrelPitch < 0)
-		mBarrelPitch = 0;
-	else
-		mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
+		// Clamp tank barrel rotation between 0 and 30 degrees
+		if(mBarrelPitch > 30)
+			mBarrelPitch = 30;
+		else if(mBarrelPitch < 0)
+			mBarrelPitch = 0;
+		else
+			mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
 
 
 /*
@@ -225,7 +240,104 @@ Ogre::Vector3 Tank::getTankForwardDirection(){
 	Ogre::Entity* mEntity = static_cast<Ogre::Entity*>(mTankBodyNode->getAttachedObject(0));
 
 }
+Ogre::Vector3 Tank::getBarrelYDirection(){
+	return mTankBarrelNode->_getDerivedPosition() * Ogre::Vector3::NEGATIVE_UNIT_Z;
+}
 
 Ogre::AxisAlignedBox Tank::getBoundingBox() {
 	return static_cast<Ogre::Entity*>(mTankBodyNode->getAttachedObject(0))->getBoundingBox();
 }
+
+
+// No input is needed in wander mode..
+void Tank::tankWander() {
+
+	// moving towards water?
+	if (mTankBodyNode->getPosition().y < 250 && wander_turning180 == false && wander_delayAfterTurning == false) {
+		wander_turning180 = true;
+
+		int randomFactor = rand() % 100; // 0 - 99 random nr
+		if (randomFactor < 50)
+			mBodyRotate = mTankBodyRotFactor;
+		else
+			mBodyRotate = -mTankBodyRotFactor;
+
+		// stop moving forward..
+		mMove = 0;
+		// reset counter
+		wander_rotateCounter = 0;
+	}
+
+	if (wander_turning180) {
+		wander_rotateCounter++;
+		if (wander_rotateCounter == 180) {
+			wander_turning180 = false;
+			wander_delayAfterTurning = true;
+			// move forward..
+			mMove = -mTankBodyMoveFactor;
+		}
+	} else {
+		// move forward..
+		mMove = -mTankBodyMoveFactor;
+
+		// rotate?
+		int randomFactor = rand() % 100; // 0 - 99 random nr
+		if (randomFactor < 25)
+			mBodyRotate = mTankBodyRotFactor; // rotate left
+		else if (randomFactor < 50)
+			mBodyRotate = -mTankBodyRotFactor; // rotate right
+		else 
+			mBodyRotate = 0;
+
+		wander_delayAfterTurning = false;
+	}
+}
+
+float Tank::calculateProjectileRange(){
+	float T = ((2*mProjectileInitVelocity)*sin(1))/-10;
+	float R = mProjectileInitVelocity*T*cos(1);
+	return R;
+}
+
+void Tank::shootProjectile(){
+	// Create unique name
+	std::ostringstream oss;
+	oss << mBoxCount;
+	std::string entityName = "Cube" + oss.str();
+	// Increment box count
+	mBoxCount++;
+
+	// Create cube mesh with unique name
+	Ogre::Entity* projectile = mSceneMgr->createEntity(entityName, "cube.mesh");
+	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();	
+	node->attachObject(projectile);
+	// Scale it to appropriate size
+	node->scale(0.1, 0.1, 0.1);
+	node->showBoundingBox(true);
+	projectiles.push_back(node);
+
+	// Create a collision shape
+	// Note that the size should match the size of the object that will be displayed
+	btCollisionShape* collisionShape = new btBoxShape(btVector3(5, 5, 5));
+
+	// The object's starting transformation
+	btTransform startingTrans;
+	startingTrans.setIdentity();
+	startingTrans.setOrigin(convert(mProjectileSpawnNode->_getDerivedPosition()));
+	startingTrans.setRotation(btQuaternion(0,0,0,1));
+
+	// Calculate the direction for the linear velocity
+				btVector3 linearVelocity(convert(getBarrelYDirection()));
+				
+				linearVelocity.normalize();
+				// Scale to appropriate velocity
+				linearVelocity *= 100.0f;
+
+	// Create the rigid body
+	btRigidBody* rigidBody = mPhysicsEngine->createRigidBody(10, startingTrans, collisionShape, node);
+	rigidBody->setFriction(10);
+
+	// Give the rigid body an initial velocity
+	rigidBody->setLinearVelocity(linearVelocity);
+}
+
