@@ -269,70 +269,7 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
             mTerrainsImported = false;
         }
     }
-	// Update physics simulation
-	mPhysicsEngine->update(evt.timeSinceLastFrame);
 
-	// Move and rotate the tank
-	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
-	mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
-
-	// Get tank's current position
-	Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
-	// Move it above the ground
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition) + mHeightOffset;
-	mTankBodyNode->setPosition(tankPosition);
-
-	// Get current tank orientation
-	Ogre::Quaternion tankOrientation = mTankBodyNode->getOrientation();
-
-	// Get point on ground where the tank is
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition);
-
-	// Get a vector pointing in the local x direction
-	Ogre::Vector3 v1 = tankPosition + tankOrientation.xAxis();
-	v1.y = mTerrain->getHeightAtWorldPosition(v1);
-	v1 -= tankPosition;
-
-	// Get a vector pointing in the local -z direction
-	Ogre::Vector3 v2 = tankPosition - tankOrientation.zAxis();
-	v2.y = mTerrain->getHeightAtWorldPosition(v2);
-	v2 -= tankPosition;
-	
-	// Find the normal vector
-	Ogre::Vector3 normal = v1.crossProduct(v2);
-	normal.normalise();
-
-
-	// Rotate the tank turret
-	mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
-
-	// Calculate the tank barrel's current pitch
-	mBarrelPitch += mBarrelRotate;
-
-	// Clamp tank barrel rotation between 0 and 30 degrees
-	if(mBarrelPitch > 30)
-		mBarrelPitch = 30;
-	else if(mBarrelPitch < 0)
-		mBarrelPitch = 0;
-	else
-		mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
-
-
-/*
-	// Get the tank's facing direction
-	Ogre::Vector3 facing = tankOrientation.xAxis();
-
-	// Find the local -z direction
-	Ogre::Vector3 right = facing.crossProduct(normal);
-	right.normalise();
-
-	// Find the local x direction
-	Ogre::Vector3 forward = normal.crossProduct(right);
-	forward.normalise();
-
-	// Orientate the tank
-	mTankNode->setOrientation(Ogre::Quaternion(forward, normal, right));
-*/
 	// Move tank?
 	//if (isTankSelected)
 	//{
@@ -376,6 +313,9 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		}
 
 	}
+
+	mPhysicsEngine->update(evt.timeSinceLastFrame);
+
 	return ret;
 }
 
@@ -498,7 +438,7 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyPressed(arg);
 
-	if (selectedTank != nullptr)
+	if (selectedTank != nullptr && isTankSelected)
 		selectedTank->keyPressed(arg);
 
     switch (arg.key)
@@ -538,7 +478,7 @@ bool DemoApp::keyReleased( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyReleased(arg);
 
-	if (selectedTank != nullptr)
+	if (selectedTank != nullptr && isTankSelected)
 		selectedTank->keyRealesed(arg);
 
 	switch (arg.key)
@@ -649,17 +589,7 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
 	tank.mTerrain = mTerrain;
 	tank.setTankStateToAI(true);
-
-
-	
-	// Add physics to tank
-	btCollisionShape* collisionShape = new btBoxShape(btVector3(200,200,200));
-	btTransform startingTrans;
-	startingTrans.setIdentity();
-	startingTrans.setOrigin(convert(tank.mTankBodyNode->getPosition()));
-	startingTrans.setRotation(btQuaternion(0,0,0,1));
-	btRigidBody* rigidBody = mPhysicsEngine->createRigidBody(15000,startingTrans,collisionShape,tank.mTankBodyNode);
-	rigidBody->setGravity(btVector3(0,0,0));
+	tank.mTankBodyNode->showBoundingBox(true);
 
 	mTanks.push_back(tank);
 

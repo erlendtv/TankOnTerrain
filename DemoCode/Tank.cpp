@@ -71,6 +71,7 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 	{
 		case OIS::KC_I:
 			mMove -= mTankBodyMoveFactor;
+			//mRigidBody->applyForce(convert(mTankBodyNode->getOrientation() * Ogre::Vector3::NEGATIVE_UNIT_Z)*100, btVector3(0,0,0));
 			break;
 
 		case OIS::KC_K:
@@ -194,6 +195,7 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		// Orientate entity based on rotation quaternion
 		mTankBodyNode->setOrientation( inclination * currentOrientation );
 	}
+
 	return true;
 }
 
@@ -220,5 +222,10 @@ Ogre::Vector3 Tank::getTankForwardDirection(){
 		Ogre::Vector3 direction = -localY.crossProduct(nLocalZ);
 		direction.normalise();
 		return direction;
-	
+	Ogre::Entity* mEntity = static_cast<Ogre::Entity*>(mTankBodyNode->getAttachedObject(0));
+
+}
+
+Ogre::AxisAlignedBox Tank::getBoundingBox() {
+	return static_cast<Ogre::Entity*>(mTankBodyNode->getAttachedObject(0))->getBoundingBox();
 }

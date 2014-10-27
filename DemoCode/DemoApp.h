@@ -86,7 +86,6 @@ protected:
 	virtual bool mouseMoved( const OIS::MouseEvent &arg );
 	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
 	void shootBox(const btVector3& position, const btQuaternion& orientation, const btVector3& linearVelocity);
-
 };
 
 
