@@ -105,7 +105,7 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 }
 
 
-bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt, const Ogre::Terrain* mTerrain)
+bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
 	// Move and rotate the tank
 	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
@@ -188,9 +188,34 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt, const Ogre::Terrain
 		// Get rotation quaternion
 		Ogre::Vector3 inclinationAxis = ( localY.crossProduct( newNormal) ).normalisedCopy();
 		Ogre::Quaternion inclination = Ogre::Quaternion(inclinationAngle, inclinationAxis);
-
 		// Orientate entity based on rotation quaternion
 		mTankBodyNode->setOrientation( inclination * currentOrientation );
 	}
 	return true;
+}
+
+Ogre::Vector3 Tank::getTurretForwardDirection(){
+		Ogre::Quaternion orientation = mTankTurretNode->getOrientation();
+		Ogre::Vector3 localY = mTankBodyNode->getPosition() + orientation.yAxis();
+		localY.y = mTerrain->getHeightAtWorldPosition(localY);
+		localY -= mTankBodyNode->getPosition();
+		Ogre::Vector3 nLocalZ = mTankBodyNode->getPosition() - orientation.zAxis();
+		nLocalZ.y = mTerrain->getHeightAtWorldPosition(nLocalZ);
+		nLocalZ -= mTankBodyNode->getPosition();
+		Ogre::Vector3 direction = -localY.crossProduct(nLocalZ);
+		direction.normalise();
+		return direction;
+}
+Ogre::Vector3 Tank::getTankForwardDirection(){
+		Ogre::Quaternion orientation = mTankBodyNode->getOrientation();
+		Ogre::Vector3 localY = mTankBodyNode->getPosition() + orientation.yAxis();
+		localY.y = mTerrain->getHeightAtWorldPosition(localY);
+		localY -= mTankBodyNode->getPosition();
+		Ogre::Vector3 nLocalZ = mTankBodyNode->getPosition() - orientation.zAxis();
+		nLocalZ.y = mTerrain->getHeightAtWorldPosition(nLocalZ);
+		nLocalZ -= mTankBodyNode->getPosition();
+		Ogre::Vector3 direction = -localY.crossProduct(nLocalZ);
+		direction.normalise();
+		return direction;
+	
 }
