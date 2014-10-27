@@ -42,6 +42,10 @@ private:
 	Ogre::SceneNode* mTankTurretNode;
 	Ogre::SceneNode* mTankBarrelNode;
 	Ogre::SceneNode* mProjectileSpawnNode;
+	Ogre::BillboardSet* mHealthBar;
+	Ogre::Billboard* mHealthBarBB;
+	Ogre::BillboardSet* mSelectionCircle;
+	Ogre::Billboard* mSelectionCircleBB;
 
 	// "Godmode" node to hold camera
 	Ogre::SceneNode* mGodCameraHolder;

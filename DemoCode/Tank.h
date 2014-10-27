@@ -13,7 +13,7 @@ public:
 	~Tank(void);
 
 	int getId() { return mId; }
-	void setTankStateToAI(bool new_state) { if (new_state) { tank_state = TANK_STATE_AI;} else {tank_state = TANK_STATE_USER;}}
+	void setTankStateToAI(bool new_state);
 
 	bool keyRealesed(const OIS::KeyEvent &arg);
 	bool keyPressed(const OIS::KeyEvent &arg);
@@ -28,9 +28,11 @@ public:
 	Ogre::SceneNode* mTankBarrelNode;
 	Ogre::SceneNode* mCameraHolder;
 	Ogre::SceneNode* mProjectileSpawnNode;
-	
-	//cast movable to entity
-	
+
+	Ogre::BillboardSet* mHealthBar;
+	Ogre::Billboard* mHealthBarBB;
+	Ogre::BillboardSet* mSelectionCircle;
+	Ogre::Billboard* mSelectionCircleBB;
 	
 	Ogre::Vector3 getTankForwardDirection();
 	Ogre::Vector3 getTurretForwardDirection();
@@ -46,7 +48,7 @@ public:
 
 	Ogre::AxisAlignedBox Tank::getBoundingBox();
 
-
+	bool tankGotHit();
 
 private:
 
@@ -65,7 +67,7 @@ private:
 	// for shooting
 	float mProjectileInitVelocity;
 
-
+	float mTankHealth;
 
 	int mId;
 	TANK_STATE tank_state;

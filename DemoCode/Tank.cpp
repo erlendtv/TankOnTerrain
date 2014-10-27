@@ -23,6 +23,7 @@ Tank::Tank(const int id)
 	wander_rotateCounter = 0;
 	wander_delayAfterTurning = false;
 	mProjectileInitVelocity = 25;
+	mTankHealth = 1; // full hp
 }
 
 
@@ -341,3 +342,21 @@ void Tank::shootProjectile(){
 	rigidBody->setLinearVelocity(linearVelocity);
 }
 
+
+bool Tank::tankGotHit() {
+	// todo, set hp loss based on distance
+}
+
+void Tank::setTankStateToAI(bool new_state) 
+{	 
+	if (new_state) { 
+		tank_state = TANK_STATE_AI;
+	} else {
+		tank_state = TANK_STATE_USER;
+	}
+	// reset movement variables
+	mMove = 0;
+	mBodyRotate = 0;
+	mBarrelRotate = 0;
+	mTurretRotate = 0;
+}
