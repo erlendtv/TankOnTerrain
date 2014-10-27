@@ -7,6 +7,7 @@ public:
 
 	bool keyRealesed(const OIS::KeyEvent &arg);
 	bool keyPressed(const OIS::KeyEvent &arg);
+	bool frameRenderingQueued(const Ogre::FrameEvent& evt, const Ogre::Terrain* mTerrain);
 
 	/* tank nodes */
 	Ogre::SceneNode* mTankBodyNode;

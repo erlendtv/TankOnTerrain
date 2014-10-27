@@ -21,6 +21,7 @@ DemoApp::DemoApp(void)
 	tankTurretRotFactor = 1;
 	tankBarrelRotFactor = 1;
 	tankCounter = 1;
+	isTankSelected = false;
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
@@ -218,12 +219,6 @@ void DemoApp::createScene(void)
 	mSceneMgr->getRootSceneNode()->createChildSceneNode("WaterNode");
 	waterNode->attachObject(pWaterEntity);
 	waterNode->translate(-1000, 200, -1000);
-
-	// TESTING PURPOSE
-	// Create a manual object to show the normal vector
-	mNormalLine = mSceneMgr->createManualObject("Normal Vector");
-	mNormalLine->clear();
-	mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(mNormalLine);
 }
 //-------------------------------------------------------------------------------------
 void DemoApp::createFrameListener(void)
@@ -261,97 +256,20 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
         }
     }
 
-	// Move and rotate the tank
-	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
-	mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
+	// Move tank?
+	//if (isTankSelected)
+	//{
+		//selectedTank->frameRenderingQueued(evt, mTerrain);
+	//}
+	mTanks.at(0).frameRenderingQueued(evt, mTerrain);
 
-	// Get tank's current position
-	Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
-	// Move it above the ground
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition) + mHeightOffset;
-	mTankBodyNode->setPosition(tankPosition);
-
-	// Get current tank orientation
-	Ogre::Quaternion tankOrientation = mTankBodyNode->getOrientation();
-
-	// Get point on ground where the tank is
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition);
-
-	// Get a vector pointing in the local x direction
-	Ogre::Vector3 v1 = tankPosition + tankOrientation.xAxis();
-	v1.y = mTerrain->getHeightAtWorldPosition(v1);
-	v1 -= tankPosition;
-
-	// Get a vector pointing in the local -z direction
-	Ogre::Vector3 v2 = tankPosition - tankOrientation.zAxis();
-	v2.y = mTerrain->getHeightAtWorldPosition(v2);
-	v2 -= tankPosition;
-	
-	// Find the normal vector
-	Ogre::Vector3 normal = v1.crossProduct(v2);
-	normal.normalise();
-
-	// Rotate the tank turret
-	mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
-
-	// Calculate the tank barrel's current pitch
-	mBarrelPitch += mBarrelRotate;
-
-	// Clamp tank barrel rotation between 0 and 30 degrees
-	if(mBarrelPitch > 30)
-		mBarrelPitch = 30;
-	else if(mBarrelPitch < 0)
-		mBarrelPitch = 0;
-	else
-		mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
-
-
-/*
-	// Get the tank's facing direction
-	Ogre::Vector3 facing = tankOrientation.xAxis();
-
-	// Find the local -z direction
-	Ogre::Vector3 right = facing.crossProduct(normal);
-	right.normalise();
-
-	// Find the local x direction
-	Ogre::Vector3 forward = normal.crossProduct(right);
-	forward.normalise();
-
-	// Orientate the tank
-	mTankNode->setOrientation(Ogre::Quaternion(forward, normal, right));
-*/
-
-//////////////////////////////////////////////////////////////////////////////////
-	// Smoothened the change in orientation by a certain weightage each frame
-	float weight = 0.0001;  // Weight of the new normal
-
-	// Get current orientation and local y direction
-	Ogre::Quaternion currentOrientation = mTankBodyNode->getOrientation();
-	Ogre::Vector3 localY = currentOrientation.yAxis();
-
-	// Compute a small amount to rotate based on weight
-	Ogre::Vector3 newNormal = localY * ( 1 - weight ) + normal * weight;
-
-	// Calculate the angle to rotate
-	Ogre::Radian inclinationAngle = Ogre::Math::ACos(localY.dotProduct(newNormal));
-
-	// If angle is not 0
-	if(inclinationAngle.valueRadians() != 0.0f)
-	{
-		// Get rotation quaternion
-		Ogre::Vector3 inclinationAxis = ( localY.crossProduct( newNormal) ).normalisedCopy();
-		Ogre::Quaternion inclination = Ogre::Quaternion(inclinationAngle, inclinationAxis);
-
-		// Orientate entity based on rotation quaternion
-		mTankBodyNode->setOrientation( inclination * currentOrientation );
-	}
 //////////////////////////////////////////////////////////////////////////////////
 	
 	// CAMERA ATTACHED TO OBJECT?
 	if(cameraAttachedToNode){
 		Ogre::Vector3 point = mTankBodyNode->getPosition();
-		mGodCameraHolder->setPosition(point.x + currentZoom, point.y + currentZoom, point.z + currentZoom);
+		//mGodCameraHolder->setPosition(point.x + currentZoom, point.y + currentZoom, point.z + currentZoom);
+		point.y = point.y + 100;
 		mCamera->lookAt(point);
 	} else {
 		// FIND HEIGHT FOR CAMERA AT NEW POSITION
@@ -400,31 +318,9 @@ void DemoApp::selectTank(){
 		if(mCamera->isAttached()){
 			mCamera->detachFromParent();
 		}
-		selectedTank = mTanks.at(0);
-		selectedTank.mCameraHolder->attachObject(mCamera);
-		Ogre::Quaternion selectedOrientation = selectedTank.mTankTurretNode->getOrientation();
-		Ogre::Vector3 localX = selectedTank.mTankBodyNode->getPosition() + selectedOrientation.xAxis();
-		localX.y = mTerrain->getHeightAtWorldPosition(localX);
-		localX -= selectedTank.mTankBodyNode->getPosition();
-		Ogre::Vector3 nLocalZ = selectedTank.mTankBodyNode->getPosition() - selectedOrientation.zAxis();
-		nLocalZ.y = mTerrain->getHeightAtWorldPosition(nLocalZ);
-		nLocalZ -= selectedTank.mTankBodyNode->getPosition();
-		Ogre::Vector3 normal = localX.crossProduct(nLocalZ);
-		normal.normalise();
-		// FOR TESTING
-	// Update the normal vector's display
-	mNormalLine->clear();
-	// Specify the material and rendering type
-	mNormalLine->begin("BaseWhiteNoLighting", Ogre::RenderOperation::OT_LINE_STRIP);
-
-	mNormalLine->position(selectedTank.mTankBodyNode->getPosition());
-	mNormalLine->colour(1, 0, 0);
-	mNormalLine->position(selectedTank.mTankBodyNode->getPosition() + normal*50);
-	mNormalLine->colour(1, 0, 0);
-
-	// Finished defining line
-	mNormalLine->end();
-
+		mTanks.at(0).mCameraHolder->attachObject(mCamera);
+		selectedTank = &mTanks.at(0);
+		isTankSelected = true;
 	}			
 }
 
@@ -443,7 +339,8 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyPressed(arg);
 
-	selectedTank.keyPressed(arg);
+	if (selectedTank != nullptr)
+		selectedTank->keyPressed(arg);
 
     switch (arg.key)
 	{ 
@@ -463,7 +360,8 @@ bool DemoApp::keyReleased( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyReleased(arg);
 
-	selectedTank.keyRealesed(arg);
+	if (selectedTank != nullptr)
+		selectedTank->keyRealesed(arg);
 
 	switch (arg.key)
 	{
@@ -566,7 +464,7 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mTankTurretNode = mTankTurretNode;
 	tank.mTankBodyNode = mTankBodyNode;
 	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
-	tank.mCameraHolder->translate(Ogre::Vector3(300,300,0));
+	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
 
 	mTanks.push_back(tank);
 
