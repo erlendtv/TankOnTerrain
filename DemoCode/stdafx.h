@@ -52,5 +52,10 @@
 #  include "OgreStaticPluginLoader.h"
 #endif
 
+// Bullet Physics header files
+#include <btBulletDynamicsCommon.h>
+
+// For Bullet Physics terrain collision shape
+#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 
 #endif
