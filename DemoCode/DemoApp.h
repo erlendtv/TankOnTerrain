@@ -76,6 +76,8 @@ private:
 	// Collision detection
 	std::vector<Ogre::AxisAlignedBox> projectileBoxes;
 
+	bool isColliding(Ogre::Vector3 one, Ogre::Vector3 two);
+
 public:
     DemoApp(void);
     virtual ~DemoApp(void);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Utilities.h"
+
 enum TANK_STATE {TANK_STATE_USER = 1, TANK_STATE_AI = 2};
 enum AI_STATE {AI_STATE_ROAMING = 1, AI_STATE_ATTACKING = 2};
 
@@ -22,10 +24,17 @@ public:
 	Ogre::SceneNode* mTankBarrelNode;
 	Ogre::SceneNode* mCameraHolder;
 	
+	//cast movable to entity
+	
+	
 	Ogre::Vector3 getTankForwardDirection();
 	Ogre::Vector3 getTurretForwardDirection();
 
 	Ogre::Terrain* mTerrain;
+
+	Ogre::AxisAlignedBox Tank::getBoundingBox();
+
+
 
 private:
 

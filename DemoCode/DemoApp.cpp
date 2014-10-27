@@ -245,6 +245,8 @@ void DemoApp::createFrameListener(void)
 bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
     bool ret = BaseApplication::frameRenderingQueued(evt);
+
+
  
     if (mTerrainGroup->isDerivedDataUpdateInProgress())
     {
@@ -315,22 +317,6 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	else
 		mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
 
-
-/*
-	// Get the tank's facing direction
-	Ogre::Vector3 facing = tankOrientation.xAxis();
-
-	// Find the local -z direction
-	Ogre::Vector3 right = facing.crossProduct(normal);
-	right.normalise();
-
-	// Find the local x direction
-	Ogre::Vector3 forward = normal.crossProduct(right);
-	forward.normalise();
-
-	// Orientate the tank
-	mTankNode->setOrientation(Ogre::Quaternion(forward, normal, right));
-*/
 	// Move tank?
 	//if (isTankSelected)
 	//{
@@ -373,9 +359,12 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			mGodCameraHolder->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z);
 		}
 
+
 	}
-	// Update physics simulation
+
 	mPhysicsEngine->update(evt.timeSinceLastFrame);
+
+	checkProjectileCollision();
 
 	return ret;
 }
@@ -473,6 +462,12 @@ void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientatio
 	// Create cube mesh with unique name
 	Ogre::Entity* cube = mSceneMgr->createEntity(entityName, "cube.mesh");
 	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+
+	node->showBoundingBox(true);
+	
+	//Ogre::AxisAlignedBox boxRef = cube->getBoundingBox();
+	
+	
 	node->attachObject(cube);
 	// Scale it to appropriate size
 	node->scale(0.05, 0.05, 0.05);
@@ -492,6 +487,8 @@ void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientatio
 
 	// Give the rigid body an initial velocity
 	rigidBody->setLinearVelocity(linearVelocity);
+	projectileBoxes.push_back(cube->getWorldBoundingBox());
+
 } 
  
 // OIS::KeyListener
@@ -499,7 +496,7 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyPressed(arg);
 
-	if (selectedTank != nullptr)
+	if (selectedTank != nullptr && isTankSelected)
 		selectedTank->keyPressed(arg);
 
     switch (arg.key)
@@ -539,7 +536,7 @@ bool DemoApp::keyReleased( const OIS::KeyEvent &arg )
 {
 	BaseApplication::keyReleased(arg);
 
-	if (selectedTank != nullptr)
+	if (selectedTank != nullptr && isTankSelected)
 		selectedTank->keyRealesed(arg);
 
 	switch (arg.key)
@@ -651,7 +648,9 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mTerrain = mTerrain;
 	tank.setTankStateToAI(true);
 	
-	mTanks.push_back(tank)
+	tank.mTankBodyNode->showBoundingBox(true);
+
+	mTanks.push_back(tank);
 
 	tankCounter++;
 
@@ -660,13 +659,18 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 
 void DemoApp::checkProjectileCollision(){
 	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
-		Ogre::AxisAlignedBox tankBox = iTank->getBoundingBox();
+		Ogre::AxisAlignedBox bodyBox = iTank->mTankBodyNode->getAttachedObject(0)->getWorldBoundingBox();
 		for(std::vector<Ogre::AxisAlignedBox>::iterator iProj = projectileBoxes.begin(); iProj != projectileBoxes.end(); ++iProj){
-			if(tankBox.contains(*iProj)){
-				delete &*iTank;
+			if(bodyBox.contains(*iProj)){
+				mShutDown = true;
 			}
 		}
 	}
+}
+
+bool DemoApp::isColliding(Ogre::Vector3 one, Ogre::Vector3 two){
+	
+	return true;
 }
  
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
