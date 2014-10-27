@@ -49,6 +49,8 @@ private:
 	float mBarrelRotate;
 	float mBarrelPitch;
 	float mHeightOffset;
+	// button states
+	bool insertBtnIsDown;
 
 	// Select object
 	Tank* selectedTank;

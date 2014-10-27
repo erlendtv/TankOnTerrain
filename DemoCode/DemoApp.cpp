@@ -22,6 +22,7 @@ DemoApp::DemoApp(void)
 	tankBarrelRotFactor = 1;
 	tankCounter = 1;
 	isTankSelected = false;
+	insertBtnIsDown = false;
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
@@ -400,6 +401,9 @@ void DemoApp::selectTank(){
 		selectedTank->mCameraHolder->attachObject(mCamera);
 		selectedTank->setTankStateToAI(false);
 
+		// Remove mouse cursor
+		mTrayMgr->hideCursor();
+
 		isTankSelected = true;
 	}			
 }
@@ -409,8 +413,12 @@ bool DemoApp::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id ){
 	case OIS::MB_Left:
 		selectTank();
 
-		if (isTankSelected) {
-			//addNewTank();
+		if (!isTankSelected && insertBtnIsDown) {
+			Ogre::Ray mouseRay = mCamera->getCameraToViewportRay(
+					static_cast<float>(mMouse->getMouseState().X.abs)/mMouse->getMouseState().width, 
+					static_cast<float>(mMouse->getMouseState().Y.abs)/mMouse->getMouseState().height);				
+			Ogre::TerrainGroup::RayResult res = mTerrainGroup->rayIntersects(mouseRay);
+			addNewTank(res.position);
 		}
 		break;
 	}
@@ -439,7 +447,14 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 			isTankSelected = false;
 			cameraAttachedToNode = false;
 			selectedTank = nullptr;
-		break;
+
+			// show cursor
+			mTrayMgr->showCursor();
+			break;
+
+		case OIS::KC_INSERT:
+			insertBtnIsDown = true;
+			break;
 		case OIS::KC_ESCAPE: 
 			mShutDown = true;
 			break;
@@ -461,6 +476,9 @@ bool DemoApp::keyReleased( const OIS::KeyEvent &arg )
 
 	switch (arg.key)
 	{
+		case OIS::KC_INSERT:
+			insertBtnIsDown = false;
+			break;
 		default:
 			break;
 	}
@@ -539,9 +557,9 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 
 	// Get the height of the terrain at a certain point
 	mTerrain = mTerrainGroup->getTerrain(0, 0);
-	float height = mTerrain->getHeightAtWorldPosition(spawnPoint.x, 0, spawnPoint.y);
+	float height = mTerrain->getHeightAtWorldPosition(spawnPoint.x, 0, spawnPoint.z);
 	// Move it above the ground
-	mTankBodyNode->translate(spawnPoint.x, height + mHeightOffset, spawnPoint.y);
+	mTankBodyNode->translate(spawnPoint.x, height + mHeightOffset, spawnPoint.z);
 
 	// Create a child scene node from tank body's scene node and attach the tank turret to it
 	mTankTurretNode = mTankBodyNode->createChildSceneNode();
