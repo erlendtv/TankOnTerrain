@@ -159,3 +159,7 @@ void PhysicsEngine::createTerrainData(float* ogreTerrainData, int terrainSize, f
 	// Disable debug drawing for the terrain
 	terrainBody->setCollisionFlags(terrainBody->getCollisionFlags() | btRigidBody::CF_DISABLE_VISUALIZE_OBJECT);
 }
+
+btDiscreteDynamicsWorld* PhysicsEngine::getDiscreteDynamicsWorld(){
+	return mDynamicsWorld;
+}

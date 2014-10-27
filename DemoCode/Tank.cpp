@@ -22,7 +22,7 @@ Tank::Tank(const int id)
 	wander_turning180 = false;
 	wander_rotateCounter = 0;
 	wander_delayAfterTurning = false;
-	mProjectileInitVelocity = 25;
+	mProjectileInitVelocity = 400;
 	mTankHealth = 1; // full hp
 }
 
@@ -216,16 +216,16 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 }
 
 Ogre::Vector3 Tank::getTurretForwardDirection(){
-		Ogre::Quaternion orientation = mTankTurretNode->getOrientation();
-		Ogre::Vector3 localY = mTankBodyNode->getPosition() + orientation.yAxis();
+		Ogre::Quaternion orientation = mTankTurretNode->_getDerivedOrientation();
+		Ogre::Vector3 localY = mTankTurretNode->_getDerivedPosition() + orientation.yAxis();
 		localY.y = mTerrain->getHeightAtWorldPosition(localY);
-		localY -= mTankBodyNode->getPosition();
-		Ogre::Vector3 nLocalZ = mTankBodyNode->getPosition() - orientation.zAxis();
+		localY -= mTankTurretNode->_getDerivedPosition();
+		Ogre::Vector3 nLocalZ = mTankTurretNode->_getDerivedPosition() - orientation.zAxis();
 		nLocalZ.y = mTerrain->getHeightAtWorldPosition(nLocalZ);
-		nLocalZ -= mTankBodyNode->getPosition();
-		Ogre::Vector3 direction = -localY.crossProduct(nLocalZ);
+		nLocalZ -= mTankTurretNode->_getDerivedPosition();
+		Ogre::Vector3 direction = localY.crossProduct(nLocalZ);
 		direction.normalise();
-		return direction;
+		return -direction;
 }
 Ogre::Vector3 Tank::getTankForwardDirection(){
 		Ogre::Quaternion orientation = mTankBodyNode->getOrientation();
@@ -238,11 +238,6 @@ Ogre::Vector3 Tank::getTankForwardDirection(){
 		Ogre::Vector3 direction = -localY.crossProduct(nLocalZ);
 		direction.normalise();
 		return direction;
-	Ogre::Entity* mEntity = static_cast<Ogre::Entity*>(mTankBodyNode->getAttachedObject(0));
-
-}
-Ogre::Vector3 Tank::getBarrelYDirection(){
-	return mTankBarrelNode->_getDerivedPosition() * Ogre::Vector3::NEGATIVE_UNIT_Z;
 }
 
 Ogre::AxisAlignedBox Tank::getBoundingBox() {
@@ -309,7 +304,7 @@ void Tank::shootProjectile(){
 	mBoxCount++;
 
 	// Create cube mesh with unique name
-	Ogre::Entity* projectile = mSceneMgr->createEntity(entityName, "cube.mesh");
+	Ogre::Entity* projectile = mSceneMgr->createEntity(entityName, "sphere.mesh");
 	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();	
 	node->attachObject(projectile);
 	// Scale it to appropriate size
@@ -319,7 +314,8 @@ void Tank::shootProjectile(){
 
 	// Create a collision shape
 	// Note that the size should match the size of the object that will be displayed
-	btCollisionShape* collisionShape = new btBoxShape(btVector3(5, 5, 5));
+	//btCollisionShape* collisionShape = new btBoxShape(btVector3(5, 5, 5));
+	btCollisionShape* collisionShape = new btSphereShape(1);
 
 	// The object's starting transformation
 	btTransform startingTrans;
@@ -328,14 +324,16 @@ void Tank::shootProjectile(){
 	startingTrans.setRotation(btQuaternion(0,0,0,1));
 
 	// Calculate the direction for the linear velocity
-				btVector3 linearVelocity(convert(getBarrelYDirection()));
-				
-				linearVelocity.normalize();
-				// Scale to appropriate velocity
-				linearVelocity *= 100.0f;
+	btVector3 linearVelocity(convert(getTurretForwardDirection()));
+	// Add the pitch of the barrel
+	linearVelocity.setY(mBarrelPitch * 0.01);
+	linearVelocity.normalize();
+	
+	// Scale to appropriate velocity
+	linearVelocity *= mProjectileInitVelocity;
 
 	// Create the rigid body
-	btRigidBody* rigidBody = mPhysicsEngine->createRigidBody(10, startingTrans, collisionShape, node);
+	btRigidBody* rigidBody = mPhysicsEngine->createRigidBody(25, startingTrans, collisionShape, node);
 	rigidBody->setFriction(10);
 
 	// Give the rigid body an initial velocity

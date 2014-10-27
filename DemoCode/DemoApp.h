@@ -82,6 +82,7 @@ private:
 
 	bool isColliding(Ogre::Vector3 one, Ogre::Vector3 two);
 
+
 public:
     DemoApp(void);
     virtual ~DemoApp(void);
