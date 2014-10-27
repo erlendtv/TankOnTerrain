@@ -194,6 +194,7 @@ void DemoApp::createScene(void)
     //mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8, 500);
     mSceneMgr->setSkyPlane(true, plane, "Examples/CloudySky", 500, 20, true, 0.5, 150, 150);
 
+
 	addNewTank(Ogre::Vector3(1800, 0, 1800));
 
 	// Water
