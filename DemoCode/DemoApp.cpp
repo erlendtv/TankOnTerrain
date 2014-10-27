@@ -196,6 +196,7 @@ void DemoApp::createScene(void)
 
 
 	addNewTank(Ogre::Vector3(1800, 0, 1800));
+	addNewTank(Ogre::Vector3(2000, 0, 2000));
 
 	// Water
 	Ogre::Entity *pWaterEntity;
@@ -321,15 +322,17 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	// Move tank?
 	//if (isTankSelected)
 	//{
-		//selectedTank->frameRenderingQueued(evt, mTerrain);
+		//selectedTank->frameRenderingQueued(evt);
 	//}
-	mTanks.at(0).frameRenderingQueued(evt);
 
+	for(std::vector<Tank>::iterator it = mTanks.begin(); it != mTanks.end(); ++it) {
+		it->frameRenderingQueued(evt);
+	}
 //////////////////////////////////////////////////////////////////////////////////
 	
 	// CAMERA ATTACHED TO OBJECT?
-	if(cameraAttachedToNode){
-		Ogre::Vector3 point = mTankBodyNode->getPosition();
+	if(cameraAttachedToNode && isTankSelected){
+		Ogre::Vector3 point = selectedTank->mTankBodyNode->getPosition();
 		mGodCameraHolder->setPosition(point.x, point.y + currentZoom, point.z);
 		point.y = point.y + 100;
 		mCamera->lookAt(point);
@@ -375,12 +378,28 @@ void DemoApp::selectTank(){
 	Ogre::RaySceneQueryResult::iterator itr = result.begin();
 	// If hit a movable object
 	if(itr != result.end() && itr->movable && itr->movable->getName() != "water" ){
+		string tankName = "chbo";
+		string barrelName = "chba";
+		string turretName = "chtu";
+		for(std::vector<Tank>::iterator it = mTanks.begin(); it != mTanks.end(); ++it) {
+			if (itr->movable->getName().compare(tankName + to_string(it->getId())) == 0) {
+				selectedTank = &*it;
+				break;
+			} else if (itr->movable->getName().compare(barrelName + to_string(it->getId())) == 0) {
+				selectedTank = &*it;
+				break;
+			} else if (itr->movable->getName().compare(turretName + to_string(it->getId())) == 0) {
+				selectedTank = &*it;
+				break;
+			}
+		}
 		cameraAttachedToNode = true;
 		if(mCamera->isAttached()){
 			mCamera->detachFromParent();
 		}
-		mTanks.at(0).mCameraHolder->attachObject(mCamera);
-		selectedTank = &mTanks.at(0);
+		selectedTank->mCameraHolder->attachObject(mCamera);
+		selectedTank->setTankStateToAI(false);
+
 		isTankSelected = true;
 	}			
 }
@@ -389,6 +408,7 @@ bool DemoApp::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id ){
 	switch(id){
 	case OIS::MB_Left:
 		selectTank();
+
 		break;
 	}
 	return true;
@@ -484,17 +504,17 @@ bool DemoApp::mouseMoved( const OIS::MouseEvent &arg )
 bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 
 	// Create tank body entity
-	Ogre::Entity* tankBody = mSceneMgr->createEntity("chbody" + tankCounter, "chbody.mesh");
+	Ogre::Entity* tankBody = mSceneMgr->createEntity("chbo" + to_string(tankCounter), "chbody.mesh");
 	tankBody->setCastShadows(true);
 	tankBody->setMaterialName("ch_tank_material");
 
 	// Create tank turret entity
-	Ogre::Entity* tankTurret = mSceneMgr->createEntity("chturret" + tankCounter, "chturret.mesh");
+	Ogre::Entity* tankTurret = mSceneMgr->createEntity("chtu" + to_string(tankCounter), "chturret.mesh");
 	tankTurret->setCastShadows(true);
 	tankTurret->setMaterialName("ch_tank_material");
 
 	// Create tank barrel entity
-	Ogre::Entity* tankBarrel = mSceneMgr->createEntity("chbarrel" + tankCounter, "chbarrel.mesh");
+	Ogre::Entity* tankBarrel = mSceneMgr->createEntity("chba" + to_string(tankCounter), "chbarrel.mesh");
 	tankBarrel->setCastShadows(true);
 	tankBarrel->setMaterialName("ch_tank_material");
 
@@ -506,7 +526,7 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	mTerrain = mTerrainGroup->getTerrain(0, 0);
 	float height = mTerrain->getHeightAtWorldPosition(spawnPoint.x, 0, spawnPoint.y);
 	// Move it above the ground
-	mTankBodyNode->translate(1800, height + mHeightOffset, 1800);
+	mTankBodyNode->translate(spawnPoint.x, height + mHeightOffset, spawnPoint.y);
 
 	// Create a child scene node from tank body's scene node and attach the tank turret to it
 	mTankTurretNode = mTankBodyNode->createChildSceneNode();
@@ -520,15 +540,16 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	// Move it to the appropriate position on the turret
 	mTankBarrelNode->translate(-30, 10, 0);
 
-	Tank tank;
+	Tank tank(tankCounter);
 	tank.mTankBarrelNode = mTankBarrelNode;
 	tank.mTankTurretNode = mTankTurretNode;
 	tank.mTankBodyNode = mTankBodyNode;
 	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
 	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
 	tank.mTerrain = mTerrain;
-
+	tank.setTankStateToAI(true);
 	mTanks.push_back(tank);
+
 
 	tankCounter++;
 

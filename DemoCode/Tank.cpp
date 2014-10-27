@@ -2,7 +2,7 @@
 #include "Tank.h"
 
 
-Tank::Tank(void)
+Tank::Tank(const int id)
 {
 	mMove = 0;
 	mBodyRotate = 0;
@@ -14,6 +14,9 @@ Tank::Tank(void)
 	mTankBodyRotFactor = 1;
 	mTankTurretRotFactor = 1;
 	mTankBarrelPitchFactor = 1;
+	mId = id;
+	tank_state = TANK_STATE_AI;
+	ui_state = AI_STATE_ROAMING;
 }
 
 
