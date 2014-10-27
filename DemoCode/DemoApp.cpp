@@ -409,6 +409,9 @@ bool DemoApp::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id ){
 	case OIS::MB_Left:
 		selectTank();
 
+		if (isTankSelected) {
+			//addNewTank();
+		}
 		break;
 	}
 	return true;
@@ -425,6 +428,18 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 
     switch (arg.key)
 	{ 
+		case OIS::KC_1:
+			if (mCamera->isAttached()) {
+				mCamera->detachFromParent();
+			}
+			mGodCameraHolder->attachObject(mCamera);
+			mCamera->setOrientation(mGodCameraHolder->getOrientation());
+			mCamera->lookAt(selectedTank->mTankBodyNode->getPosition());
+
+			isTankSelected = false;
+			cameraAttachedToNode = false;
+			selectedTank = nullptr;
+		break;
 		case OIS::KC_ESCAPE: 
 			mShutDown = true;
 			break;
