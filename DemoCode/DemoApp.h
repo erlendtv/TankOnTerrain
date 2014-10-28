@@ -7,7 +7,7 @@
 #include <vector>
 #include "PhysicsEngine.h"
 
-enum zoom_level {ZOOM1 = 500, ZOOM2 = 750, ZOOM3 = 1000, ZOOM4 = 1250, ZOOM5 = 1500};
+enum zoom_level {ZOOM1 = 500, ZOOM2 = 1000, ZOOM3 = 1500, ZOOM4 = 2000, ZOOM5 = 2500};
 
 using namespace std;
  
@@ -18,6 +18,7 @@ private:
     Ogre::TerrainGroup* mTerrainGroup;
     bool mTerrainsImported;
     OgreBites::Label* mInfoLabel;
+	Ogre::RaySceneQuery* mRaySceneQuery;
 
 	// Physics
 	PhysicsEngine* mPhysicsEngine;
@@ -68,6 +69,7 @@ private:
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
 	bool addNewTank(const Ogre::Vector3 spawnPoint);
+	std::vector<Ogre::SceneNode*> boxes;
 
 	// Current camera zoom
 	Ogre::Vector3 camHeightAtPos;

@@ -1,5 +1,11 @@
 #include "stdafx.h"
 #include "DemoApp.h"
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <io.h>
+#include <iostream>
+#include <string>
  
 //-------------------------------------------------------------------------------------
 DemoApp::DemoApp(void)
@@ -27,6 +33,8 @@ DemoApp::DemoApp(void)
 	mPhysicsEngine = new PhysicsEngine();
 	mPhysicsEngine->initPhysics();
 	mBoxCount = 0;
+
+	cout << "TESTTESTETSTET";
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
@@ -34,6 +42,7 @@ DemoApp::~DemoApp(void)
 	if(mPhysicsEngine){
 		delete mPhysicsEngine;
 	}
+	mSceneMgr->destroyQuery(mRaySceneQuery);
 }
 //-------------------------------------------------------------------------------------
 void DemoApp::destroyScene(void)
@@ -220,7 +229,7 @@ void DemoApp::createScene(void)
 		"WaterPlane",
 		Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
 		nWaterPlane,
-		14000, 14000,
+		12000, 12000,
 		20, 20,
 		true, 1,
 		10, 10,
@@ -231,7 +240,7 @@ void DemoApp::createScene(void)
 	Ogre::SceneNode *waterNode =
 	mSceneMgr->getRootSceneNode()->createChildSceneNode("WaterNode");
 	waterNode->attachObject(pWaterEntity);
-	waterNode->translate(-1000, 200, -1000);
+	waterNode->translate(0, 200, 0);
 }
 
 //-------------------------------------------------------------------------------------
@@ -240,6 +249,8 @@ void DemoApp::createFrameListener(void)
     BaseApplication::createFrameListener();
  
     mInfoLabel = mTrayMgr->createLabel(OgreBites::TL_TOP, "TInfo", "", 350);
+
+	mRaySceneQuery = mSceneMgr->createRayQuery(Ogre::Ray());
 }
 //-------------------------------------------------------------------------------------
 bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -315,6 +326,13 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	}
 
 	mPhysicsEngine->update(evt.timeSinceLastFrame);
+
+	for(std::vector<Ogre::SceneNode*>::iterator it = boxes.begin(); it != boxes.end(); ++it) {
+		if ((*it)->_getDerivedPosition().distance(mTanks.at(0).mTankBodyNode->_getDerivedPosition()) < 50) {
+			mTanks.at(0).setTankStateToAI(true);
+		}
+	}
+	
 
 	return ret;
 }
@@ -414,11 +432,13 @@ void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientatio
 	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	node->attachObject(cube);
 	// Scale it to appropriate size
-	node->scale(0.05, 0.05, 0.05);
+	node->scale(0.1, 0.1, 0.1);
+	node->showBoundingBox(true);
+	boxes.push_back(node);
 
 	// Create a collision shape
 	// Note that the size should match the size of the object that will be displayed
-	btCollisionShape* collisionShape = new btBoxShape(btVector3(2.5, 2.5, 2.5));
+	btCollisionShape* collisionShape = new btBoxShape(btVector3(5, 5, 5));
 
 	// The object's starting transformation
 	btTransform startingTrans;
@@ -588,7 +608,7 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
 	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
 	tank.mTerrain = mTerrain;
-	tank.setTankStateToAI(true);
+	//tank.setTankStateToAI(true);
 	tank.mTankBodyNode->showBoundingBox(true);
 
 	mTanks.push_back(tank);
@@ -626,7 +646,6 @@ extern "C" {
                 e.getFullDescription().c_str() << std::endl;
 #endif
         }
- 
         return 0;
     }
  

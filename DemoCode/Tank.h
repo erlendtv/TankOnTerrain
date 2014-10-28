@@ -50,6 +50,13 @@ private:
 
 	int mId;
 	TANK_STATE tank_state;
-	AI_STATE ui_state;
+	AI_STATE ai_state;
+
+	// AI METHODS n stuff
+	void tankWander();
+	bool wander_turning180;
+	bool wander_delayAfterTurning;
+	int wander_rotateCounter;
+
 };
 

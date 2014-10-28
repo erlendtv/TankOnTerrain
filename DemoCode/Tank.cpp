@@ -15,8 +15,12 @@ Tank::Tank(const int id)
 	mTankTurretRotFactor = 1;
 	mTankBarrelPitchFactor = 1;
 	mId = id;
-	tank_state = TANK_STATE_AI;
-	ui_state = AI_STATE_ROAMING;
+	//tank_state = TANK_STATE_AI;
+	tank_state = TANK_STATE_USER; // testing
+	ai_state = AI_STATE_ROAMING;
+	wander_turning180 = false;
+	wander_rotateCounter = 0;
+	wander_delayAfterTurning = false;
 }
 
 
@@ -71,7 +75,6 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 	{
 		case OIS::KC_I:
 			mMove -= mTankBodyMoveFactor;
-			//mRigidBody->applyForce(convert(mTankBodyNode->getOrientation() * Ogre::Vector3::NEGATIVE_UNIT_Z)*100, btVector3(0,0,0));
 			break;
 
 		case OIS::KC_K:
@@ -111,49 +114,56 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 
 bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
+
+	if (tank_state == TANK_STATE_AI) {
+		if (ai_state == AI_STATE_ROAMING) {
+			tankWander();
+		}
+	}
+
 	// Move and rotate the tank
-	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
-	mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
+		mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
+		mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
 
-	// Get tank's current position
-	Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
-	// Move it above the ground
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition) + mHeightOffset;
-	mTankBodyNode->setPosition(tankPosition);
+		// Get tank's current position
+		Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
+		// Move it above the ground
+		tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition) + mHeightOffset;
+		mTankBodyNode->setPosition(tankPosition);
 
-	// Get current tank orientation
-	Ogre::Quaternion tankOrientation = mTankBodyNode->getOrientation();
+		// Get current tank orientation
+		Ogre::Quaternion tankOrientation = mTankBodyNode->getOrientation();
 
-	// Get point on ground where the tank is
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition);
+		// Get point on ground where the tank is
+		tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition);
 
-	// Get a vector pointing in the local x direction
-	Ogre::Vector3 v1 = tankPosition + tankOrientation.xAxis();
-	v1.y = mTerrain->getHeightAtWorldPosition(v1);
-	v1 -= tankPosition;
+		// Get a vector pointing in the local x direction
+		Ogre::Vector3 v1 = tankPosition + tankOrientation.xAxis();
+		v1.y = mTerrain->getHeightAtWorldPosition(v1);
+		v1 -= tankPosition;
 
-	// Get a vector pointing in the local -z direction
-	Ogre::Vector3 v2 = tankPosition - tankOrientation.zAxis();
-	v2.y = mTerrain->getHeightAtWorldPosition(v2);
-	v2 -= tankPosition;
+		// Get a vector pointing in the local -z direction
+		Ogre::Vector3 v2 = tankPosition - tankOrientation.zAxis();
+		v2.y = mTerrain->getHeightAtWorldPosition(v2);
+		v2 -= tankPosition;
 	
-	// Find the normal vector
-	Ogre::Vector3 normal = v1.crossProduct(v2);
-	normal.normalise();
+		// Find the normal vector
+		Ogre::Vector3 normal = v1.crossProduct(v2);
+		normal.normalise();
 
-	// Rotate the tank turret
-	mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
+		// Rotate the tank turret
+		mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
 
-	// Calculate the tank barrel's current pitch
-	mBarrelPitch += mBarrelRotate;
+		// Calculate the tank barrel's current pitch
+		mBarrelPitch += mBarrelRotate;
 
-	// Clamp tank barrel rotation between 0 and 30 degrees
-	if(mBarrelPitch > 30)
-		mBarrelPitch = 30;
-	else if(mBarrelPitch < 0)
-		mBarrelPitch = 0;
-	else
-		mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
+		// Clamp tank barrel rotation between 0 and 30 degrees
+		if(mBarrelPitch > 30)
+			mBarrelPitch = 30;
+		else if(mBarrelPitch < 0)
+			mBarrelPitch = 0;
+		else
+			mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
 
 
 /*
@@ -228,4 +238,48 @@ Ogre::Vector3 Tank::getTankForwardDirection(){
 
 Ogre::AxisAlignedBox Tank::getBoundingBox() {
 	return static_cast<Ogre::Entity*>(mTankBodyNode->getAttachedObject(0))->getBoundingBox();
+}
+
+// No input is needed in wander mode..
+void Tank::tankWander() {
+
+	// moving towards water?
+	if (mTankBodyNode->getPosition().y < 250 && wander_turning180 == false && wander_delayAfterTurning == false) {
+		wander_turning180 = true;
+
+		int randomFactor = rand() % 100; // 0 - 99 random nr
+		if (randomFactor < 50)
+			mBodyRotate = mTankBodyRotFactor;
+		else
+			mBodyRotate = -mTankBodyRotFactor;
+
+		// stop moving forward..
+		mMove = 0;
+		// reset counter
+		wander_rotateCounter = 0;
+	}
+
+	if (wander_turning180) {
+		wander_rotateCounter++;
+		if (wander_rotateCounter == 180) {
+			wander_turning180 = false;
+			wander_delayAfterTurning = true;
+			// move forward..
+			mMove = -mTankBodyMoveFactor;
+		}
+	} else {
+		// move forward..
+		mMove = -mTankBodyMoveFactor;
+
+		// rotate?
+		int randomFactor = rand() % 100; // 0 - 99 random nr
+		if (randomFactor < 25)
+			mBodyRotate = mTankBodyRotFactor; // rotate left
+		else if (randomFactor < 50)
+			mBodyRotate = -mTankBodyRotFactor; // rotate right
+		else 
+			mBodyRotate = 0;
+
+		wander_delayAfterTurning = false;
+	}
 }
