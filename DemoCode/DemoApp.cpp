@@ -763,7 +763,7 @@ void DemoApp::spawnExplosionParticleSystem(Ogre::Vector3 position){
 	// Increment box count
 	mExplosionCount++;
 
-	Ogre::ParticleSystem* particleSystem = mSceneMgr->createParticleSystem(entityName,"Examples/explosionTemplate");
+	Ogre::ParticleSystem* particleSystem = mSceneMgr->createParticleSystem(entityName,"Examples/Explode");
 	Ogre::SceneNode* particleSysNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	particleSystem->fastForward(1.0);
 	particleSysNode->translate(position);
