@@ -724,11 +724,10 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 void DemoApp::checkProjectileCollision(){
 	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
 		for(std::vector<Ogre::SceneNode*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
-			if(iTank->mTankBodyNode->_getDerivedPosition().distance((*it)->_getDerivedPosition()) < 50){
+			Ogre::Vector3 pos = (*it)->_getDerivedPosition();
+			if(iTank->mTankBodyNode->_getDerivedPosition().distance(pos) < 50 || abs(pos.y - getProjectileHeightAtXZ(pos)) < 1){
 				if((*it)->getAttachedObjectIterator().hasMoreElements()){
-					Ogre::Vector3 projectilePos = (*it)->getPosition();
-					projectilePos.y = getProjectileHeightAtXZ(projectilePos);
-					spawnExplosionParticleSystem(projectilePos);
+					spawnExplosionParticleSystem(pos);
 					Ogre::MovableObject* obj = static_cast<Ogre::MovableObject*>((*it)->getAttachedObject(0));
 					(*it)->getCreator()->destroyMovableObject(obj);	
 				}
