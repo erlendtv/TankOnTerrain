@@ -19,6 +19,7 @@ public:
 	bool keyPressed(const OIS::KeyEvent &arg);
 	bool frameRenderingQueued(const Ogre::FrameEvent& evts);
 	void shootProjectile();
+	void createSmokeParticleSystem();
 	float calculateProjectileRange();
 
 
@@ -68,6 +69,8 @@ private:
 	float mProjectileInitVelocity;
 
 	float mTankHealth;
+
+	int mSmokeSystemCount;
 
 	int mId;
 	TANK_STATE tank_state;

@@ -22,8 +22,9 @@ Tank::Tank(const int id)
 	wander_turning180 = false;
 	wander_rotateCounter = 0;
 	wander_delayAfterTurning = false;
-	mProjectileInitVelocity = 400;
+	mProjectileInitVelocity = 800;
 	mTankHealth = 1; // full hp
+	mSmokeSystemCount = 0;
 }
 
 
@@ -35,19 +36,19 @@ bool Tank::keyRealesed(const OIS::KeyEvent &arg)
 {
 	switch (arg.key)
 	{
-		case OIS::KC_I:
+		case OIS::KC_W:
 			mMove += mTankBodyMoveFactor;
 			break;
 
-		case OIS::KC_K:
+		case OIS::KC_S:
 			mMove -= mTankBodyMoveFactor;
 			break;
 
-		case OIS::KC_J:
+		case OIS::KC_A:
 			mBodyRotate -= mTankBodyRotFactor;
 			break;
 
-		case OIS::KC_L:
+		case OIS::KC_D:
 			mBodyRotate += mTankBodyRotFactor;
 			break;
 
@@ -76,19 +77,19 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 {
 	switch (arg.key)
 	{
-		case OIS::KC_I:
+		case OIS::KC_W:
 			mMove -= mTankBodyMoveFactor;
 			break;
 
-		case OIS::KC_K:
+		case OIS::KC_S:
 			mMove += mTankBodyMoveFactor;
 			break;
 
-		case OIS::KC_J:
+		case OIS::KC_A:
 			mBodyRotate += mTankBodyRotFactor;
 			break;
 
-		case OIS::KC_L:
+		case OIS::KC_D:
 			mBodyRotate -= mTankBodyRotFactor;
 			break;
 
@@ -107,7 +108,7 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 		case OIS::KC_DOWN:
 			mBarrelRotate -= mTankBarrelPitchFactor;
 			break;
-		case OIS::KC_RSHIFT:
+		case OIS::KC_SPACE:
 			shootProjectile();
 			break;
 		default:
@@ -305,11 +306,11 @@ void Tank::shootProjectile(){
 
 	// Create cube mesh with unique name
 	Ogre::Entity* projectile = mSceneMgr->createEntity(entityName, "sphere.mesh");
+	projectile->setMaterialName("Examples/EnvMappedRustySteel");
 	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();	
 	node->attachObject(projectile);
 	// Scale it to appropriate size
-	node->scale(0.1, 0.1, 0.1);
-	node->showBoundingBox(true);
+	node->scale(0.075, 0.075, 0.075);
 	projectiles.push_back(node);
 
 	// Create a collision shape
@@ -338,6 +339,8 @@ void Tank::shootProjectile(){
 
 	// Give the rigid body an initial velocity
 	rigidBody->setLinearVelocity(linearVelocity);
+
+	createSmokeParticleSystem();
 }
 
 
@@ -357,4 +360,19 @@ void Tank::setTankStateToAI(bool new_state)
 	mBodyRotate = 0;
 	mBarrelRotate = 0;
 	mTurretRotate = 0;
+}
+
+void Tank::createSmokeParticleSystem(){
+	// Create unique name
+	std::ostringstream oss;
+	oss << mSmokeSystemCount;
+	std::string entityName = "smoke" + oss.str();
+	// Increment box count
+	mSmokeSystemCount++;
+
+	Ogre::ParticleSystem* particleSystem = mSceneMgr->createParticleSystem(entityName,"Examples/JetEngine1");
+	Ogre::SceneNode* particleSysNode = mProjectileSpawnNode->createChildSceneNode();
+	particleSysNode->translate(20,0,0);
+	particleSysNode->attachObject(particleSystem);
+	
 }

@@ -162,16 +162,15 @@ void DemoApp::createScene(void)
 //  Ogre::MaterialManager::getSingleton().setDefaultTextureFiltering(Ogre::TFO_ANISOTROPIC);
 //  Ogre::MaterialManager::getSingleton().setDefaultAnisotropy(7);
  
-    Ogre::Vector3 lightdir(0.55, -0.3, 0.75);
+    Ogre::Vector3 lightdir(0.7, 0.1, 0.3);
     lightdir.normalise();
  
     Ogre::Light* light = mSceneMgr->createLight("tstLight");
     light->setType(Ogre::Light::LT_DIRECTIONAL);
     light->setDirection(lightdir);
     light->setDiffuseColour(Ogre::ColourValue::White);
-    light->setSpecularColour(Ogre::ColourValue(0.4, 0.4, 0.4));
- 
-    mSceneMgr->setAmbientLight(Ogre::ColourValue(0.2, 0.2, 0.2));
+    light->setSpecularColour(Ogre::ColourValue(0.1, 0.1, 0.1));
+    mSceneMgr->setAmbientLight(Ogre::ColourValue(0.4, 0.4, 0.4));
  
     mTerrainGlobals = OGRE_NEW Ogre::TerrainGlobalOptions();
  
@@ -205,7 +204,7 @@ void DemoApp::createScene(void)
 	mPhysicsEngine->createTerrainData(terrain->getHeightData(), terrain->getSize(), terrain->getWorldSize()/terrain->getSize());
  
     Ogre::ColourValue fadeColour(0.9, 0.9, 0.9);
-    mSceneMgr->setFog(Ogre::FOG_LINEAR, fadeColour, 0.0, 10, 1200);
+    mSceneMgr->setFog(Ogre::FOG_LINEAR, fadeColour,0.0, 10, 5000);
     mWindow->getViewport(0)->setBackgroundColour(fadeColour);
  
     Ogre::Plane plane;
@@ -236,11 +235,14 @@ void DemoApp::createScene(void)
 		Ogre::Vector3::UNIT_Z);
 
 	pWaterEntity = mSceneMgr->createEntity("water", "WaterPlane");
-	pWaterEntity->setMaterialName("Examples/TextureEffect4");
+	pWaterEntity->setMaterialName("Examples/TextureEffect2");
 	Ogre::SceneNode *waterNode =
 	mSceneMgr->getRootSceneNode()->createChildSceneNode("WaterNode");
 	waterNode->attachObject(pWaterEntity);
 	waterNode->translate(0, 200, 0);
+
+	// Create some obstacles
+	createWorldObstacles();
 }
 
 //-------------------------------------------------------------------------------------
@@ -475,10 +477,6 @@ void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientatio
 	// Create cube mesh with unique name
 	Ogre::Entity* cube = mSceneMgr->createEntity(entityName, "cube.mesh");
 	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	node->showBoundingBox(true);
-	projectiles.push_back(node);
-	
-	
 	node->attachObject(cube);
 	// Scale it to appropriate size
 	node->scale(0.1, 0.1, 0.1);
@@ -643,17 +641,16 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	mTankTurretNode->attachObject(tankTurret);
 	// Move it above tank body
 	mTankTurretNode->translate(0, 3, 0);
+	mTankTurretNode->setInheritOrientation(false);
 
 	// Create a child scene node from tank turret's scene node and attach the tank barrel to it
 	mTankBarrelNode = mTankTurretNode->createChildSceneNode();
 	mTankBarrelNode->attachObject(tankBarrel);
 	// Move it to the appropriate position on the turret
 	mTankBarrelNode->translate(-30, 10, 0);
-	mTankBarrelNode->showBoundingBox(true);
 
 	mProjectileSpawnNode = mTankBarrelNode->createChildSceneNode();
-	mProjectileSpawnNode->translate(-100,0,0);
-	mProjectileSpawnNode->showBoundingBox(true);
+	mProjectileSpawnNode->translate(-90,0,0);
 
 	// Create a BillboardSet to represent a health bar and set its properties
 	mHealthBar = mSceneMgr->createBillboardSet("Healthbar" + tankCounter);
@@ -726,6 +723,20 @@ void DemoApp::checkProjectileCollision(){
 	}
 }
 
+void DemoApp::createWorldObstacles(){
+	for(int i = 0; i < 20; i ++){
+		Ogre::Entity* house = mSceneMgr->createEntity("house" + to_string(i), "tudorhouse.mesh");
+		house->setCastShadows(true);
+		house->setMaterialName("Examples/TudorHouse");
+		Ogre::SceneNode* houseNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+		houseNode->attachObject(house);
+		houseNode->scale(0.4,0.4,0.4);
+		float x = (rand() % 10000)-5000;
+		float z = (rand() % 10000)-5000;
+		float y = mTerrain->getHeightAtWorldPosition(x,0,z);
+		houseNode->translate(x,y,z);
+	}
+}
 
  
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
