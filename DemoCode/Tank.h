@@ -23,9 +23,11 @@ public:
 	Ogre::SceneNode* mTankTurretNode;
 	Ogre::SceneNode* mTankBarrelNode;
 	Ogre::SceneNode* mCameraHolder;
-	
-	//cast movable to entity
-	
+
+	Ogre::BillboardSet* mHealthBar;
+	Ogre::Billboard* mHealthBarBB;
+	Ogre::BillboardSet* mSelectionCircle;
+	Ogre::Billboard* mSelectionCircleBB;
 	
 	Ogre::Vector3 getTankForwardDirection();
 	Ogre::Vector3 getTurretForwardDirection();
@@ -47,6 +49,8 @@ private:
 	float mTankBodyRotFactor;
 	float mTankTurretRotFactor;
 	float mTankBarrelPitchFactor;
+
+	float mRobotHealth;
 
 	int mId;
 	TANK_STATE tank_state;

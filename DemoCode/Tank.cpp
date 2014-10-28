@@ -21,6 +21,7 @@ Tank::Tank(const int id)
 	wander_turning180 = false;
 	wander_rotateCounter = 0;
 	wander_delayAfterTurning = false;
+	mRobotHealth = 1; // full hp
 }
 
 

@@ -600,6 +600,37 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	// Move it to the appropriate position on the turret
 	mTankBarrelNode->translate(-30, 10, 0);
 
+	// Create a BillboardSet to represent a health bar and set its properties
+	mHealthBar = mSceneMgr->createBillboardSet("Healthbar" + tankCounter);
+	mHealthBar->setCastShadows(false);
+	mHealthBar->setDefaultDimensions(100, 10);
+	mHealthBar->setMaterialName("myMaterial/HealthBar");
+	// Create a billboard for the health bar BillboardSet
+	mHealthBarBB = mHealthBar->createBillboard(Ogre::Vector3(0, 100, 0));
+	// Set it to always draw on top of other objects
+	mHealthBar->setRenderQueueGroup(Ogre::RENDER_QUEUE_OVERLAY);
+	// Create a BillboardSet for a selection circle and set its properties
+	mSelectionCircle = mSceneMgr->createBillboardSet("SelectionCircle" + tankCounter);
+	mSelectionCircle->setCastShadows(false);
+	mSelectionCircle->setDefaultDimensions(60, 60);
+	mSelectionCircle->setMaterialName("myMaterial/SelectionCircle");
+	mSelectionCircle->setBillboardType(Ogre::BillboardType::BBT_PERPENDICULAR_COMMON);
+	mSelectionCircle->setCommonDirection(Ogre::Vector3(0, 1, 0));
+	mSelectionCircle->setCommonUpVector(Ogre::Vector3(0, 0, -1));
+	// Create a billboard for the selection circle BillboardSet
+	mSelectionCircleBB = mSelectionCircle->createBillboard(Ogre::Vector3(0, 1, 0));
+	mSelectionCircleBB->setTexcoordRect(0.0, 0.0, 1.0, 1.0);
+
+	// Attach the healthbar and selection circle
+	// Calculate the health bar adjustments
+	float healthBarAdjuster = (1.0 - 1)/2;	// This must range from 0.0 to 0.5
+	// Set the health bar to the appropriate level
+	mHealthBarBB->setTexcoordRect(0.0 + healthBarAdjuster, 0.0, 0.5 + healthBarAdjuster, 1.0);
+	mTankBodyNode->attachObject(mHealthBar);
+	mTankBodyNode->attachObject(mSelectionCircle);
+
+	mHealthBar->setBillboardType(Ogre::BillboardType::BBT_POINT);
+
 	Tank tank(tankCounter);
 
 	tank.mTankBarrelNode = mTankBarrelNode;
@@ -608,6 +639,10 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
 	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
 	tank.mTerrain = mTerrain;
+	tank.mHealthBar = mHealthBar;
+	tank.mHealthBarBB = mHealthBarBB;
+	tank.mSelectionCircle = mSelectionCircle;
+	tank.mSelectionCircleBB = mSelectionCircleBB;
 	//tank.setTankStateToAI(true);
 	tank.mTankBodyNode->showBoundingBox(true);
 
