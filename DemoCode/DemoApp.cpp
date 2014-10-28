@@ -29,12 +29,13 @@ DemoApp::DemoApp(void)
 	tankCounter = 1;
 	isTankSelected = false;
 	insertBtnIsDown = false;
+	mExplosionCount = 0;
 
 	mPhysicsEngine = new PhysicsEngine();
 	mPhysicsEngine->initPhysics();
 
 	mBoxCount = 0;
-
+	projectiles.reserve(10);
 	mTanks.reserve(100);
 }
 //-------------------------------------------------------------------------------------
@@ -723,10 +724,19 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 void DemoApp::checkProjectileCollision(){
 	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
 		for(std::vector<Ogre::SceneNode*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
-				mShutDown = true;
+			if(iTank->mTankBodyNode->_getDerivedPosition().distance((*it)->_getDerivedPosition()) < 50){
+				if((*it)->getAttachedObjectIterator().hasMoreElements()){
+					Ogre::Vector3 projectilePos = (*it)->getPosition();
+					projectilePos.y = getProjectileHeightAtXZ(projectilePos);
+					spawnExplosionParticleSystem(projectilePos);
+					Ogre::MovableObject* obj = static_cast<Ogre::MovableObject*>((*it)->getAttachedObject(0));
+					(*it)->getCreator()->destroyMovableObject(obj);	
+				}
 		}	
 	}
 }
+}
+
 void DemoApp::createWorldObstacles(){
 	for(int i = 0; i < 20; i ++){
 		Ogre::Entity* house = mSceneMgr->createEntity("house" + to_string(i), "tudorhouse.mesh");
@@ -742,7 +752,24 @@ void DemoApp::createWorldObstacles(){
 	}
 }
 
-float DemoApp::getProjectileHeightAtXZ(Ogre::Vector3 position){}
+float DemoApp::getProjectileHeightAtXZ(Ogre::Vector3 position){
+	float height = mTerrain->getHeightAtWorldPosition(position.x,0,position.z);	
+	return height;
+}
+
+void DemoApp::spawnExplosionParticleSystem(Ogre::Vector3 position){
+	// Create unique name
+	std::ostringstream oss;
+	oss << mExplosionCount;
+	std::string entityName = "explosion" + oss.str();
+	// Increment box count
+	mExplosionCount++;
+
+	Ogre::ParticleSystem* particleSystem = mSceneMgr->createParticleSystem(entityName,"Examples/Smoke");
+	Ogre::SceneNode* particleSysNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+	particleSysNode->translate(position);
+	particleSysNode->attachObject(particleSystem);
+}
 
 
  
