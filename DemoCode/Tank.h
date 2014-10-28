@@ -12,7 +12,7 @@ public:
 	~Tank(void);
 
 	int getId() { return mId; }
-	void setTankStateToAI(bool new_state) { if (new_state) { tank_state = TANK_STATE_AI;} else {tank_state = TANK_STATE_USER;}}
+	void setTankStateToAI(bool new_state);
 
 	bool keyRealesed(const OIS::KeyEvent &arg);
 	bool keyPressed(const OIS::KeyEvent &arg);
@@ -36,6 +36,8 @@ public:
 
 	Ogre::AxisAlignedBox Tank::getBoundingBox();
 
+	bool tankGotHit();
+
 private:
 
 	/* tank movement variables */
@@ -50,7 +52,7 @@ private:
 	float mTankTurretRotFactor;
 	float mTankBarrelPitchFactor;
 
-	float mRobotHealth;
+	float mTankHealth;
 
 	int mId;
 	TANK_STATE tank_state;

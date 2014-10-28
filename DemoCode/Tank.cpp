@@ -284,3 +284,21 @@ void Tank::tankWander() {
 		wander_delayAfterTurning = false;
 	}
 }
+
+bool Tank::tankGotHit() {
+	// todo, set hp loss based on distance
+}
+
+void Tank::setTankStateToAI(bool new_state) 
+{	 
+	if (new_state) { 
+		tank_state = TANK_STATE_AI;
+	} else {
+		tank_state = TANK_STATE_USER;
+	}
+	// reset movement variables
+	mMove = 0;
+	mBodyRotate = 0;
+	mBarrelRotate = 0;
+	mTurretRotate = 0;
+}
