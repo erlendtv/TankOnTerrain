@@ -32,6 +32,7 @@ DemoApp::DemoApp(void)
 
 	mPhysicsEngine = new PhysicsEngine();
 	mPhysicsEngine->initPhysics();
+
 	mBoxCount = 0;
 }
 //-------------------------------------------------------------------------------------
@@ -375,7 +376,6 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	mPhysicsEngine->update(evt.timeSinceLastFrame);
 
-
 	checkProjectileCollision();
 
 
@@ -693,7 +693,7 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mPhysicsEngine = mPhysicsEngine;
 	tank.mSceneMgr = mSceneMgr;
 	tank.mBoxCount = mBoxCount;
-	tank.projectiles = projectiles;
+	tank.projectiles = &projectiles;
 	tank.mProjectileSpawnNode = mProjectileSpawnNode;
 
 	tank.setTankStateToAI(true);
@@ -704,7 +704,6 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mSelectionCircleBB = mSelectionCircleBB;
 	tank.setTankStateToAI(true);
 	tank.mTanks = &mTanks;
-	tank.mTankBodyNode->showBoundingBox(true);
 
 	mTanks.push_back(tank);
 
@@ -716,13 +715,10 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 void DemoApp::checkProjectileCollision(){
 	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
 		for(std::vector<Ogre::SceneNode*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
-			if(iTank->mTankBodyNode->_getDerivedPosition().distance((*it)->_getDerivedPosition()) < 50){
-				// TODO BULLET STUFF
-			}
+				mShutDown = true;
 		}	
 	}
 }
-
 void DemoApp::createWorldObstacles(){
 	for(int i = 0; i < 20; i ++){
 		Ogre::Entity* house = mSceneMgr->createEntity("house" + to_string(i), "tudorhouse.mesh");
@@ -734,14 +730,12 @@ void DemoApp::createWorldObstacles(){
 		float x = (rand() % 10000)-5000;
 		float z = (rand() % 10000)-5000;
 		float y = mTerrain->getHeightAtWorldPosition(x,0,z);
-		houseNode->translate(x,y,z);
+		houseNode->translate(x,y+100,z);
 	}
 }
 
-void DemoApp::checkWorldCollisions(){
-	
-    
-}
+float DemoApp::getProjectileHeightAtXZ(Ogre::Vector3 position){}
+
 
  
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32

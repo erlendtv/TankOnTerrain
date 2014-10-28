@@ -100,6 +100,8 @@ protected:
 	void checkProjectileCollision();
 	void createWorldObstacles();
 	void checkWorldCollisions();
+	float getProjectileHeightAtXZ(Ogre::Vector3 position);
+
 
 };
 

@@ -17,6 +17,7 @@ public:
 	void createTerrainData(float* ogreTerrainData, int size, float scale);
 	btDiscreteDynamicsWorld* getDiscreteDynamicsWorld();
 
+
 private:
 	btDefaultCollisionConfiguration*		mCollisionConfiguration;
 	btCollisionDispatcher*					mDispatcher;
