@@ -484,7 +484,6 @@ void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientatio
 	node->attachObject(cube);
 	// Scale it to appropriate size
 	node->scale(0.1, 0.1, 0.1);
-	node->showBoundingBox(true);
 	projectiles.push_back(node);
 
 	// Create a collision shape
