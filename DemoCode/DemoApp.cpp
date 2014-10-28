@@ -21,7 +21,7 @@ DemoApp::DemoApp(void)
 	mBarrelPitch = 0;
 	mHeightOffset = 18;
 	cameraAttachedToNode = false;
-	currentZoom = ZOOM1;
+	currentZoom = ZOOM3;
 	tankBodyMoveFactor = 1.5;
 	tankBodyRotFactor = 1;
 	tankTurretRotFactor = 1;
@@ -33,8 +33,6 @@ DemoApp::DemoApp(void)
 	mPhysicsEngine = new PhysicsEngine();
 	mPhysicsEngine->initPhysics();
 	mBoxCount = 0;
-
-	cout << "TESTTESTETSTET";
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
@@ -521,6 +519,7 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 
 			isTankSelected = false;
 			cameraAttachedToNode = false;
+			selectedTank->setTankStateToAI(true);
 			selectedTank = nullptr;
 
 			// show cursor
@@ -703,7 +702,8 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mHealthBarBB = mHealthBarBB;
 	tank.mSelectionCircle = mSelectionCircle;
 	tank.mSelectionCircleBB = mSelectionCircleBB;
-	//tank.setTankStateToAI(true);
+	tank.setTankStateToAI(true);
+	tank.mTanks = &mTanks;
 	tank.mTankBodyNode->showBoundingBox(true);
 
 	mTanks.push_back(tank);
