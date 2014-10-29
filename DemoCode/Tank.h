@@ -91,5 +91,6 @@ private:
 
 	void tankAttacking(Tank* tank_to_attack);
 
+	int ready_to_shoot;
 };
 

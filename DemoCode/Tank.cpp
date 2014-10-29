@@ -28,6 +28,7 @@ Tank::Tank(const int id)
 	attack_move_counter = 0;
 	mProjectileInitVelocity = 800;
 	mSmokeSystemCount = 0;
+	ready_to_shoot = 1000;
 }
 
 
@@ -336,7 +337,7 @@ void Tank::shootProjectile(){
 	// Create unique name
 	std::ostringstream oss;
 	oss << mBoxCount;
-	std::string entityName = "Cube" + oss.str();
+	std::string entityName = "Cube" + std::to_string(mId) + oss.str();
 	// Increment box count
 	mBoxCount++;
 
@@ -398,6 +399,13 @@ void Tank::tankAttacking(Tank* tank_to_attack) {
 	direction = destination - mTankBodyNode->_getDerivedPosition(); 
 	if (direction.length() < 500) {
 		// shoot
+		if (ready_to_shoot == 0) {
+			shootProjectile();
+			ready_to_shoot = 500;
+		} else {
+			ready_to_shoot--;
+		}
+
 		mMove = 0;
 	} else {
 		// move tank body against target and drive
@@ -438,7 +446,7 @@ void Tank::createSmokeParticleSystem(){
 	// Create unique name
 	std::ostringstream oss;
 	oss << mSmokeSystemCount;
-	std::string entityName = "smoke" + oss.str();
+	std::string entityName = "smoke" + std::to_string(mId) + oss.str();
 	// Increment box count
 	mSmokeSystemCount++;
 
