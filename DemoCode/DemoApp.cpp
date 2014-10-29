@@ -33,6 +33,8 @@ DemoApp::DemoApp(void)
 	mPhysicsEngine = new PhysicsEngine();
 	mPhysicsEngine->initPhysics();
 	mBoxCount = 0;
+
+	mTanks.reserve(100);
 }
 //-------------------------------------------------------------------------------------
 DemoApp::~DemoApp(void)
@@ -214,6 +216,9 @@ void DemoApp::createScene(void)
 
 	addNewTank(Ogre::Vector3(1800, 0, 1800));
 	addNewTank(Ogre::Vector3(2000, 0, 2000));
+	addNewTank(Ogre::Vector3(2300, 0, 1500));
+	addNewTank(Ogre::Vector3(0, 0, 0));
+	addNewTank(Ogre::Vector3(-1000, 0, -1000));
 
 	// Water
 	Ogre::Entity *pWaterEntity;
@@ -652,7 +657,7 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	mProjectileSpawnNode->translate(-90,0,0);
 
 	// Create a BillboardSet to represent a health bar and set its properties
-	mHealthBar = mSceneMgr->createBillboardSet("Healthbar" + tankCounter);
+	mHealthBar = mSceneMgr->createBillboardSet("Healthbar" + to_string(tankCounter));
 	mHealthBar->setCastShadows(false);
 	mHealthBar->setDefaultDimensions(100, 10);
 	mHealthBar->setMaterialName("myMaterial/HealthBar");
@@ -661,7 +666,7 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	// Set it to always draw on top of other objects
 	mHealthBar->setRenderQueueGroup(Ogre::RENDER_QUEUE_OVERLAY);
 	// Create a BillboardSet for a selection circle and set its properties
-	mSelectionCircle = mSceneMgr->createBillboardSet("SelectionCircle" + tankCounter);
+	mSelectionCircle = mSceneMgr->createBillboardSet("SelectionCircle" + to_string(tankCounter));
 	mSelectionCircle->setCastShadows(false);
 	mSelectionCircle->setDefaultDimensions(60, 60);
 	mSelectionCircle->setMaterialName("myMaterial/SelectionCircle");
@@ -707,6 +712,9 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mTankBodyNode->showBoundingBox(true);
 
 	mTanks.push_back(tank);
+	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
+		iTank->mTanks = &mTanks;
+	}
 
 	tankCounter++;
 
