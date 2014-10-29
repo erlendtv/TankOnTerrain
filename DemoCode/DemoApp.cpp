@@ -526,7 +526,7 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 			mTrayMgr->showCursor();
 			break;
 
-		case OIS::KC_INSERT:
+		case OIS::KC_I:
 			insertBtnIsDown = true;
 			break;
 		case OIS::KC_ESCAPE: 
