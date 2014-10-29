@@ -70,6 +70,7 @@ private:
 	void selectTank();
 	int tankCounter;
 	bool isTankSelected;
+	int mExplosionCount;
 	
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
@@ -81,6 +82,9 @@ private:
 	zoom_level currentZoom;
 
 	bool isColliding(Ogre::Vector3 one, Ogre::Vector3 two);
+	void spawnExposionParticleSystem(Ogre::Vector3 position);
+	void spawnExplosionParticleSystem(Ogre::Vector3 position);
+
 
 
 public:
@@ -100,6 +104,8 @@ protected:
 	void checkProjectileCollision();
 	void createWorldObstacles();
 	void checkWorldCollisions();
+	float getProjectileHeightAtXZ(Ogre::Vector3 position);
+
 
 };
 

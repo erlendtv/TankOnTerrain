@@ -63,8 +63,6 @@ void PhysicsEngine::initPhysics()
 
 	// Create a dynamic simulation environment
 	mDynamicsWorld = new btDiscreteDynamicsWorld(mDispatcher, mBroadphase, mSolver, mCollisionConfiguration);
-	mDynamicsWorld->stepSimulation(btScalar(1.)/btScalar(60.), btScalar(1.)/btScalar(60.));
-	
 	// Set the gravity for the simulation
 	mDynamicsWorld->setGravity(btVector3(0, -100, 0));
 }
@@ -164,3 +162,4 @@ void PhysicsEngine::createTerrainData(float* ogreTerrainData, int terrainSize, f
 btDiscreteDynamicsWorld* PhysicsEngine::getDiscreteDynamicsWorld(){
 	return mDynamicsWorld;
 }
+

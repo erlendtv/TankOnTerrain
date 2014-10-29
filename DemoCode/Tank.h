@@ -45,7 +45,7 @@ public:
 	Ogre::SceneManager* mSceneMgr;
 	Ogre::Terrain* mTerrain;
 	int mBoxCount;
-	std::vector<Ogre::SceneNode*> projectiles;
+	std::vector<Ogre::SceneNode*>* projectiles;
 
 	Ogre::AxisAlignedBox Tank::getBoundingBox();
 

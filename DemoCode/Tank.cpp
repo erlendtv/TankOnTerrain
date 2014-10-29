@@ -348,7 +348,7 @@ void Tank::shootProjectile(){
 	node->attachObject(projectile);
 	// Scale it to appropriate size
 	node->scale(0.075, 0.075, 0.075);
-	projectiles.push_back(node);
+	(*projectiles).push_back(node);
 
 	// Create a collision shape
 	// Note that the size should match the size of the object that will be displayed
