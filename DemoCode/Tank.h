@@ -53,6 +53,8 @@ public:
 
 	std::vector<Tank>* mTanks;
 
+	bool isDead;
+
 private:
 
 	/* tank movement variables */

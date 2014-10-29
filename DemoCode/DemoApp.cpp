@@ -341,8 +341,11 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		//selectedTank->frameRenderingQueued(evt);
 	//}
 
+	int pos = 0;
 	for(std::vector<Tank>::iterator it = mTanks.begin(); it != mTanks.end(); ++it) {
-		it->frameRenderingQueued(evt);
+		if (!it->isDead)
+			it->frameRenderingQueued(evt);
+		pos++;
 	}
 //////////////////////////////////////////////////////////////////////////////////
 	

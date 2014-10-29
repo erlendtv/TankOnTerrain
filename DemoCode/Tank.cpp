@@ -29,6 +29,7 @@ Tank::Tank(const int id)
 	mProjectileInitVelocity = 800;
 	mSmokeSystemCount = 0;
 	ready_to_shoot = 1000;
+	isDead = false;
 }
 
 
@@ -424,7 +425,13 @@ void Tank::tankAttacking(Tank* tank_to_attack) {
 }
 
 bool Tank::tankGotHit() {
-	// todo, set hp loss based on distance
+	// todo, set hp loss based on distance'
+
+
+	/* tell DemoApp that this tank is dead */
+	if (mTankHealth <= 0) {
+		isDead = true;
+	}
 }
 
 void Tank::setTankStateToAI(bool new_state) 
