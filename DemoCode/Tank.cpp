@@ -133,6 +133,8 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 					if ((mTankBodyNode->getPosition() - mTanks->at(i).mTankBodyNode->getPosition()).length() < 500) {
 						mCurrentlyAttacking = &mTanks->at(i);
 						ai_state = AI_STATE_ATTACKING;
+						mBodyRotate = 0;
+						mMove = 0;
 					}
 				}
 				i++;
