@@ -38,6 +38,8 @@ public:
 
 	bool tankGotHit();
 
+	std::vector<Tank>* mTanks;
+
 private:
 
 	/* tank movement variables */
@@ -54,6 +56,8 @@ private:
 
 	float mTankHealth;
 
+	Tank* mCurrentlyAttacking;
+
 	int mId;
 	TANK_STATE tank_state;
 	AI_STATE ai_state;
@@ -63,6 +67,10 @@ private:
 	bool wander_turning180;
 	bool wander_delayAfterTurning;
 	int wander_rotateCounter;
+
+	bool attack_rotating_body;
+
+	void tankAttacking(Tank* tank_to_attack);
 
 };
 

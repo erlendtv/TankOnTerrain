@@ -21,7 +21,8 @@ Tank::Tank(const int id)
 	wander_turning180 = false;
 	wander_rotateCounter = 0;
 	wander_delayAfterTurning = false;
-	mRobotHealth = 1; // full hp
+	mTankHealth = 1; // full hp
+	attack_rotating_body = false;
 }
 
 
@@ -119,6 +120,20 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	if (tank_state == TANK_STATE_AI) {
 		if (ai_state == AI_STATE_ROAMING) {
 			tankWander();
+
+			int i = 0;
+			for(std::vector<Tank>::iterator it = mTanks->begin(); it != mTanks->end(); ++it) {
+				if (it->getId() != getId()) {
+					if ((mTankBodyNode->getPosition() - mTanks->at(i).mTankBodyNode->getPosition()).length() < 500) {
+						mCurrentlyAttacking = &mTanks->at(i);
+						ai_state = AI_STATE_ATTACKING;
+					}
+				}
+				i++;
+			}
+
+		} else if (ai_state == AI_STATE_ATTACKING) {
+			tankAttacking(mCurrentlyAttacking);
 		}
 	}
 
@@ -285,6 +300,41 @@ void Tank::tankWander() {
 	}
 }
 
+void Tank::tankAttacking(Tank* tank_to_attack) {
+
+	/* move turret towards target! */
+	Ogre::Vector3 destination = tank_to_attack->mTankBodyNode->_getDerivedPosition();    
+	Ogre::Vector3 direction = destination - mTankBodyNode->_getDerivedPosition(); 
+	Ogre::Vector3 forward;
+	forward = mTankTurretNode->_getDerivedOrientation() * Ogre::Vector3(-1, 0 ,0);
+	forward.y = 0;                                                    // Ignore pitch difference angle
+	direction.y = 0;
+	direction.normalise();
+	forward.normalise();
+	Ogre::Quaternion q = forward.getRotationTo(direction);
+	mTankTurretNode->rotate(q);
+
+	// shooting distance?
+	direction = destination - mTankBodyNode->_getDerivedPosition(); 
+	if (direction.length() < 500) {
+		// shoot
+		mMove = 0;
+	} else {
+		// move tank body against target and drive
+		forward = mTankBodyNode->_getDerivedOrientation() * Ogre::Vector3(-1, 0 ,0);
+		forward.y = 0;                                                    // Ignore pitch difference angle
+		direction.y = 0;
+		direction.normalise();
+		forward.normalise();
+		Ogre::Quaternion q = forward.getRotationTo(direction);
+		mTankBodyNode->rotate(q);
+
+		// drive
+		mMove = -1;
+	}
+
+}
+
 bool Tank::tankGotHit() {
 	// todo, set hp loss based on distance
 }
@@ -293,6 +343,7 @@ void Tank::setTankStateToAI(bool new_state)
 {	 
 	if (new_state) { 
 		tank_state = TANK_STATE_AI;
+		ai_state = AI_STATE_ROAMING;
 	} else {
 		tank_state = TANK_STATE_USER;
 	}
