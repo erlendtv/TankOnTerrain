@@ -471,6 +471,7 @@ bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
 
 			isTankSelected = false;
 			cameraAttachedToNode = false;
+			selectedTank->setTankStateToAI(true);
 			selectedTank = nullptr;
 
 			// show cursor

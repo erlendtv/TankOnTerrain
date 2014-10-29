@@ -133,6 +133,7 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			}
 
 		} else if (ai_state == AI_STATE_ATTACKING) {
+			// todo: check if mCurrentlyAttacking tank exists..
 			tankAttacking(mCurrentlyAttacking);
 		}
 	}
