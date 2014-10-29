@@ -15,6 +15,7 @@ public:
 	void update(float deltaTime);
 	btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* collisionShape, Ogre::SceneNode* node);
 	void createTerrainData(float* ogreTerrainData, int size, float scale);
+	btDiscreteDynamicsWorld* getDiscreteDynamicsWorld();
 
 private:
 	btDefaultCollisionConfiguration*		mCollisionConfiguration;

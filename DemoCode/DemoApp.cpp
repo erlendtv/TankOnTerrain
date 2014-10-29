@@ -160,16 +160,15 @@ void DemoApp::createScene(void)
 //  Ogre::MaterialManager::getSingleton().setDefaultTextureFiltering(Ogre::TFO_ANISOTROPIC);
 //  Ogre::MaterialManager::getSingleton().setDefaultAnisotropy(7);
  
-    Ogre::Vector3 lightdir(0.55, -0.3, 0.75);
+    Ogre::Vector3 lightdir(0.7, 0.1, 0.3);
     lightdir.normalise();
  
     Ogre::Light* light = mSceneMgr->createLight("tstLight");
     light->setType(Ogre::Light::LT_DIRECTIONAL);
     light->setDirection(lightdir);
     light->setDiffuseColour(Ogre::ColourValue::White);
-    light->setSpecularColour(Ogre::ColourValue(0.4, 0.4, 0.4));
- 
-    mSceneMgr->setAmbientLight(Ogre::ColourValue(0.2, 0.2, 0.2));
+    light->setSpecularColour(Ogre::ColourValue(0.1, 0.1, 0.1));
+    mSceneMgr->setAmbientLight(Ogre::ColourValue(0.4, 0.4, 0.4));
  
     mTerrainGlobals = OGRE_NEW Ogre::TerrainGlobalOptions();
  
@@ -203,7 +202,7 @@ void DemoApp::createScene(void)
 	mPhysicsEngine->createTerrainData(terrain->getHeightData(), terrain->getSize(), terrain->getWorldSize()/terrain->getSize());
  
     Ogre::ColourValue fadeColour(0.9, 0.9, 0.9);
-    mSceneMgr->setFog(Ogre::FOG_LINEAR, fadeColour, 0.0, 10, 1200);
+    mSceneMgr->setFog(Ogre::FOG_LINEAR, fadeColour,0.0, 10, 5000);
     mWindow->getViewport(0)->setBackgroundColour(fadeColour);
  
     Ogre::Plane plane;
@@ -234,11 +233,14 @@ void DemoApp::createScene(void)
 		Ogre::Vector3::UNIT_Z);
 
 	pWaterEntity = mSceneMgr->createEntity("water", "WaterPlane");
-	pWaterEntity->setMaterialName("Examples/TextureEffect4");
+	pWaterEntity->setMaterialName("Examples/TextureEffect2");
 	Ogre::SceneNode *waterNode =
 	mSceneMgr->getRootSceneNode()->createChildSceneNode("WaterNode");
 	waterNode->attachObject(pWaterEntity);
 	waterNode->translate(0, 200, 0);
+
+	// Create some obstacles
+	createWorldObstacles();
 }
 
 //-------------------------------------------------------------------------------------
@@ -254,6 +256,8 @@ void DemoApp::createFrameListener(void)
 bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
     bool ret = BaseApplication::frameRenderingQueued(evt);
+
+
  
     if (mTerrainGroup->isDerivedDataUpdateInProgress())
     {
@@ -278,6 +282,51 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
             mTerrainsImported = false;
         }
     }
+
+	// Move and rotate the tank
+	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
+	mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
+
+	// Get tank's current position
+	Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
+	// Move it above the ground
+	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition) + mHeightOffset;
+	mTankBodyNode->setPosition(tankPosition);
+
+	// Get current tank orientation
+	Ogre::Quaternion tankOrientation = mTankBodyNode->getOrientation();
+
+	// Get point on ground where the tank is
+	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition);
+
+	// Get a vector pointing in the local x direction
+	Ogre::Vector3 v1 = tankPosition + tankOrientation.xAxis();
+	v1.y = mTerrain->getHeightAtWorldPosition(v1);
+	v1 -= tankPosition;
+
+	// Get a vector pointing in the local -z direction
+	Ogre::Vector3 v2 = tankPosition - tankOrientation.zAxis();
+	v2.y = mTerrain->getHeightAtWorldPosition(v2);
+	v2 -= tankPosition;
+	
+	// Find the normal vector
+	Ogre::Vector3 normal = v1.crossProduct(v2);
+	normal.normalise();
+
+
+	// Rotate the tank turret
+	mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
+
+	// Calculate the tank barrel's current pitch
+	mBarrelPitch += mBarrelRotate;
+
+	// Clamp tank barrel rotation between 0 and 30 degrees
+	if(mBarrelPitch > 30)
+		mBarrelPitch = 30;
+	else if(mBarrelPitch < 0)
+		mBarrelPitch = 0;
+	else
+		mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
 
 	// Move tank?
 	//if (isTankSelected)
@@ -321,16 +370,14 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			mGodCameraHolder->setPosition(oldPos.x, heightAtNew + currentZoom, oldPos.z);
 		}
 
+
 	}
 
 	mPhysicsEngine->update(evt.timeSinceLastFrame);
 
-	for(std::vector<Ogre::SceneNode*>::iterator it = boxes.begin(); it != boxes.end(); ++it) {
-		if ((*it)->_getDerivedPosition().distance(mTanks.at(0).mTankBodyNode->_getDerivedPosition()) < 50) {
-			mTanks.at(0).setTankStateToAI(true);
-		}
-	}
-	
+
+	checkProjectileCollision();
+
 
 	return ret;
 }
@@ -432,7 +479,7 @@ void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientatio
 	// Scale it to appropriate size
 	node->scale(0.1, 0.1, 0.1);
 	node->showBoundingBox(true);
-	boxes.push_back(node);
+	projectiles.push_back(node);
 
 	// Create a collision shape
 	// Note that the size should match the size of the object that will be displayed
@@ -449,6 +496,7 @@ void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientatio
 
 	// Give the rigid body an initial velocity
 	rigidBody->setLinearVelocity(linearVelocity);
+
 } 
  
 // OIS::KeyListener
@@ -592,12 +640,16 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	mTankTurretNode->attachObject(tankTurret);
 	// Move it above tank body
 	mTankTurretNode->translate(0, 3, 0);
+	mTankTurretNode->setInheritOrientation(false);
 
 	// Create a child scene node from tank turret's scene node and attach the tank barrel to it
 	mTankBarrelNode = mTankTurretNode->createChildSceneNode();
 	mTankBarrelNode->attachObject(tankBarrel);
 	// Move it to the appropriate position on the turret
 	mTankBarrelNode->translate(-30, 10, 0);
+
+	mProjectileSpawnNode = mTankBarrelNode->createChildSceneNode();
+	mProjectileSpawnNode->translate(-90,0,0);
 
 	// Create a BillboardSet to represent a health bar and set its properties
 	mHealthBar = mSceneMgr->createBillboardSet("Healthbar" + tankCounter);
@@ -638,6 +690,14 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 	tank.mCameraHolder = tank.mTankTurretNode->createChildSceneNode();
 	tank.mCameraHolder->translate(Ogre::Vector3(300,200,0));
 	tank.mTerrain = mTerrain;
+	tank.mPhysicsEngine = mPhysicsEngine;
+	tank.mSceneMgr = mSceneMgr;
+	tank.mBoxCount = mBoxCount;
+	tank.projectiles = projectiles;
+	tank.mProjectileSpawnNode = mProjectileSpawnNode;
+
+	tank.setTankStateToAI(true);
+
 	tank.mHealthBar = mHealthBar;
 	tank.mHealthBarBB = mHealthBarBB;
 	tank.mSelectionCircle = mSelectionCircle;
@@ -652,6 +712,32 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 
 	return true;
 }
+
+void DemoApp::checkProjectileCollision(){
+	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
+		for(std::vector<Ogre::SceneNode*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
+			if(iTank->mTankBodyNode->_getDerivedPosition().distance((*it)->_getDerivedPosition()) < 50){
+				// TODO BULLET STUFF
+			}
+		}	
+	}
+}
+
+void DemoApp::createWorldObstacles(){
+	for(int i = 0; i < 20; i ++){
+		Ogre::Entity* house = mSceneMgr->createEntity("house" + to_string(i), "tudorhouse.mesh");
+		house->setCastShadows(true);
+		house->setMaterialName("Examples/TudorHouse");
+		Ogre::SceneNode* houseNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+		houseNode->attachObject(house);
+		houseNode->scale(0.4,0.4,0.4);
+		float x = (rand() % 10000)-5000;
+		float z = (rand() % 10000)-5000;
+		float y = mTerrain->getHeightAtWorldPosition(x,0,z);
+		houseNode->translate(x,y,z);
+	}
+}
+
  
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN

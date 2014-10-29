@@ -41,6 +41,7 @@ private:
 	Ogre::SceneNode* mTankBodyNode;
 	Ogre::SceneNode* mTankTurretNode;
 	Ogre::SceneNode* mTankBarrelNode;
+	Ogre::SceneNode* mProjectileSpawnNode;
 	Ogre::BillboardSet* mHealthBar;
 	Ogre::Billboard* mHealthBarBB;
 	Ogre::BillboardSet* mSelectionCircle;
@@ -73,11 +74,15 @@ private:
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
 	bool addNewTank(const Ogre::Vector3 spawnPoint);
-	std::vector<Ogre::SceneNode*> boxes;
+	std::vector<Ogre::SceneNode*> projectiles;
 
 	// Current camera zoom
 	Ogre::Vector3 camHeightAtPos;
 	zoom_level currentZoom;
+
+	bool isColliding(Ogre::Vector3 one, Ogre::Vector3 two);
+
+
 public:
     DemoApp(void);
     virtual ~DemoApp(void);
@@ -92,6 +97,10 @@ protected:
 	virtual bool mouseMoved( const OIS::MouseEvent &arg );
 	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
 	void shootBox(const btVector3& position, const btQuaternion& orientation, const btVector3& linearVelocity);
+	void checkProjectileCollision();
+	void createWorldObstacles();
+	void checkWorldCollisions();
+
 };
 
 

@@ -2,6 +2,7 @@
 #include "Tank.h"
 
 
+
 Tank::Tank(const int id)
 {
 	mMove = 0;
@@ -23,6 +24,8 @@ Tank::Tank(const int id)
 	wander_delayAfterTurning = false;
 	mTankHealth = 1; // full hp
 	attack_rotating_body = false;
+	mProjectileInitVelocity = 800;
+	mSmokeSystemCount = 0;
 }
 
 
@@ -34,19 +37,19 @@ bool Tank::keyRealesed(const OIS::KeyEvent &arg)
 {
 	switch (arg.key)
 	{
-		case OIS::KC_I:
+		case OIS::KC_W:
 			mMove += mTankBodyMoveFactor;
 			break;
 
-		case OIS::KC_K:
+		case OIS::KC_S:
 			mMove -= mTankBodyMoveFactor;
 			break;
 
-		case OIS::KC_J:
+		case OIS::KC_A:
 			mBodyRotate -= mTankBodyRotFactor;
 			break;
 
-		case OIS::KC_L:
+		case OIS::KC_D:
 			mBodyRotate += mTankBodyRotFactor;
 			break;
 
@@ -75,19 +78,19 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
 {
 	switch (arg.key)
 	{
-		case OIS::KC_I:
+		case OIS::KC_W:
 			mMove -= mTankBodyMoveFactor;
 			break;
 
-		case OIS::KC_K:
+		case OIS::KC_S:
 			mMove += mTankBodyMoveFactor;
 			break;
 
-		case OIS::KC_J:
+		case OIS::KC_A:
 			mBodyRotate += mTankBodyRotFactor;
 			break;
 
-		case OIS::KC_L:
+		case OIS::KC_D:
 			mBodyRotate -= mTankBodyRotFactor;
 			break;
 
@@ -105,6 +108,9 @@ bool Tank::keyPressed(const OIS::KeyEvent &arg)
  
 		case OIS::KC_DOWN:
 			mBarrelRotate -= mTankBarrelPitchFactor;
+			break;
+		case OIS::KC_SPACE:
+			shootProjectile();
 			break;
 		default:
 			break;
@@ -227,16 +233,16 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 }
 
 Ogre::Vector3 Tank::getTurretForwardDirection(){
-		Ogre::Quaternion orientation = mTankTurretNode->getOrientation();
-		Ogre::Vector3 localY = mTankBodyNode->getPosition() + orientation.yAxis();
+		Ogre::Quaternion orientation = mTankTurretNode->_getDerivedOrientation();
+		Ogre::Vector3 localY = mTankTurretNode->_getDerivedPosition() + orientation.yAxis();
 		localY.y = mTerrain->getHeightAtWorldPosition(localY);
-		localY -= mTankBodyNode->getPosition();
-		Ogre::Vector3 nLocalZ = mTankBodyNode->getPosition() - orientation.zAxis();
+		localY -= mTankTurretNode->_getDerivedPosition();
+		Ogre::Vector3 nLocalZ = mTankTurretNode->_getDerivedPosition() - orientation.zAxis();
 		nLocalZ.y = mTerrain->getHeightAtWorldPosition(nLocalZ);
-		nLocalZ -= mTankBodyNode->getPosition();
-		Ogre::Vector3 direction = -localY.crossProduct(nLocalZ);
+		nLocalZ -= mTankTurretNode->_getDerivedPosition();
+		Ogre::Vector3 direction = localY.crossProduct(nLocalZ);
 		direction.normalise();
-		return direction;
+		return -direction;
 }
 Ogre::Vector3 Tank::getTankForwardDirection(){
 		Ogre::Quaternion orientation = mTankBodyNode->getOrientation();
@@ -249,13 +255,12 @@ Ogre::Vector3 Tank::getTankForwardDirection(){
 		Ogre::Vector3 direction = -localY.crossProduct(nLocalZ);
 		direction.normalise();
 		return direction;
-	Ogre::Entity* mEntity = static_cast<Ogre::Entity*>(mTankBodyNode->getAttachedObject(0));
-
 }
 
 Ogre::AxisAlignedBox Tank::getBoundingBox() {
 	return static_cast<Ogre::Entity*>(mTankBodyNode->getAttachedObject(0))->getBoundingBox();
 }
+
 
 // No input is needed in wander mode..
 void Tank::tankWander() {
@@ -300,6 +305,60 @@ void Tank::tankWander() {
 		wander_delayAfterTurning = false;
 	}
 }
+
+float Tank::calculateProjectileRange(){
+	float T = ((2*mProjectileInitVelocity)*sin(1))/-10;
+	float R = mProjectileInitVelocity*T*cos(1);
+	return R;
+}
+
+void Tank::shootProjectile(){
+	// Create unique name
+	std::ostringstream oss;
+	oss << mBoxCount;
+	std::string entityName = "Cube" + oss.str();
+	// Increment box count
+	mBoxCount++;
+
+	// Create cube mesh with unique name
+	Ogre::Entity* projectile = mSceneMgr->createEntity(entityName, "sphere.mesh");
+	projectile->setMaterialName("Examples/EnvMappedRustySteel");
+	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();	
+	node->attachObject(projectile);
+	// Scale it to appropriate size
+	node->scale(0.075, 0.075, 0.075);
+	projectiles.push_back(node);
+
+	// Create a collision shape
+	// Note that the size should match the size of the object that will be displayed
+	//btCollisionShape* collisionShape = new btBoxShape(btVector3(5, 5, 5));
+	btCollisionShape* collisionShape = new btSphereShape(1);
+
+	// The object's starting transformation
+	btTransform startingTrans;
+	startingTrans.setIdentity();
+	startingTrans.setOrigin(convert(mProjectileSpawnNode->_getDerivedPosition()));
+	startingTrans.setRotation(btQuaternion(0,0,0,1));
+
+	// Calculate the direction for the linear velocity
+	btVector3 linearVelocity(convert(getTurretForwardDirection()));
+	// Add the pitch of the barrel
+	linearVelocity.setY(mBarrelPitch * 0.01);
+	linearVelocity.normalize();
+	
+	// Scale to appropriate velocity
+	linearVelocity *= mProjectileInitVelocity;
+
+	// Create the rigid body
+	btRigidBody* rigidBody = mPhysicsEngine->createRigidBody(25, startingTrans, collisionShape, node);
+	rigidBody->setFriction(10);
+
+	// Give the rigid body an initial velocity
+	rigidBody->setLinearVelocity(linearVelocity);
+
+	createSmokeParticleSystem();
+}
+
 
 void Tank::tankAttacking(Tank* tank_to_attack) {
 
@@ -353,4 +412,19 @@ void Tank::setTankStateToAI(bool new_state)
 	mBodyRotate = 0;
 	mBarrelRotate = 0;
 	mTurretRotate = 0;
+}
+
+void Tank::createSmokeParticleSystem(){
+	// Create unique name
+	std::ostringstream oss;
+	oss << mSmokeSystemCount;
+	std::string entityName = "smoke" + oss.str();
+	// Increment box count
+	mSmokeSystemCount++;
+
+	Ogre::ParticleSystem* particleSystem = mSceneMgr->createParticleSystem(entityName,"Examples/JetEngine1");
+	Ogre::SceneNode* particleSysNode = mProjectileSpawnNode->createChildSceneNode();
+	particleSysNode->translate(20,0,0);
+	particleSysNode->attachObject(particleSystem);
+	
 }
