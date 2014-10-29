@@ -24,6 +24,8 @@ Tank::Tank(const int id)
 	wander_delayAfterTurning = false;
 	mTankHealth = 1; // full hp
 	attack_rotating_body = false;
+	attack_move = false;
+	attack_move_counter = 0;
 	mProjectileInitVelocity = 800;
 	mSmokeSystemCount = 0;
 }
@@ -143,6 +145,22 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		} else if (ai_state == AI_STATE_ATTACKING) {
 			// todo: check if mCurrentlyAttacking tank exists..
 			tankAttacking(mCurrentlyAttacking);
+
+			if (attack_move) {
+				tankWander();
+				attack_move_counter++;
+				if (attack_move_counter > 1000) {
+					attack_move = false;
+					mMove = 0;
+					mBodyRotate = 0;
+				}
+			} else {
+				int randomInt = rand() % 1000;
+				if (randomInt < 1) {
+					attack_move = true;
+					attack_move_counter = 0;
+				}
+			}
 		}
 	}
 

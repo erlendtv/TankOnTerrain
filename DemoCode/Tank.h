@@ -86,6 +86,8 @@ private:
 	int wander_rotateCounter;
 
 	bool attack_rotating_body;
+	bool attack_move;
+	int attack_move_counter;
 
 	void tankAttacking(Tank* tank_to_attack);
 
