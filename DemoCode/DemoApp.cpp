@@ -343,8 +343,7 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	int pos = 0;
 	for(std::vector<Tank>::iterator it = mTanks.begin(); it != mTanks.end(); ++it) {
-		if (!it->isDead)
-			it->frameRenderingQueued(evt);
+		it->frameRenderingQueued(evt);
 		pos++;
 	}
 //////////////////////////////////////////////////////////////////////////////////
@@ -733,10 +732,12 @@ void DemoApp::checkProjectileCollision(){
 					spawnExplosionParticleSystem(projectilePos);
 					Ogre::MovableObject* obj = static_cast<Ogre::MovableObject*>((*it)->getAttachedObject(0));
 					(*it)->getCreator()->destroyMovableObject(obj);	
+
+					iTank->tankGotHit();
 				}
-		}	
+			}	
+		}
 	}
-}
 }
 
 void DemoApp::createWorldObstacles(){
