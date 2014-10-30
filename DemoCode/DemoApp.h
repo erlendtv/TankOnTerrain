@@ -71,6 +71,8 @@ private:
 	int tankCounter;
 	bool isTankSelected;
 	int mExplosionCount;
+
+	Tank* selectedTankForGUI;
 	
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
@@ -84,6 +86,7 @@ private:
 	bool isColliding(Ogre::Vector3 one, Ogre::Vector3 two);
 	void spawnExposionParticleSystem(Ogre::Vector3 position);
 	void spawnExplosionParticleSystem(Ogre::Vector3 position);
+	void getTankInfoForGUI();
 
 
 
@@ -100,7 +103,7 @@ protected:
     virtual bool keyReleased( const OIS::KeyEvent &arg );
 	virtual bool mouseMoved( const OIS::MouseEvent &arg );
 	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
-	void shootBox(const btVector3& position, const btQuaternion& orientation, const btVector3& linearVelocity);
+	void updateDetailsPanel(Tank* tank);
 	void checkProjectileCollision();
 	void createWorldObstacles();
 	void checkWorldCollisions();

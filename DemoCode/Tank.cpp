@@ -30,6 +30,7 @@ Tank::Tank(const int id)
 	mSmokeSystemCount = 0;
 	ready_to_shoot = 1000;
 	mKills = 0;
+	mDeaths = 0;
 }
 
 
@@ -436,6 +437,7 @@ void Tank::tankGotHit() {
 
 	/* tell DemoApp that this tank is dead */
 	if (mTankHealth <= 0) {
+		createDeathParticleSystem();
 		respawn();
 	}
 }
@@ -483,4 +485,18 @@ void Tank::createSmokeParticleSystem(){
 	particleSysNode->translate(20,0,0);
 	particleSysNode->attachObject(particleSystem);
 	
+}
+
+void Tank::createDeathParticleSystem(){
+	// Create unique name
+	std::ostringstream oss;
+	oss << mSmokeSystemCount;
+	std::string entityName = std::to_string(mId) + "smoke" + oss.str();
+	// Increment box count
+	mSmokeSystemCount++;
+	Ogre::ParticleSystem* particleSystem = mSceneMgr->createParticleSystem(entityName,"Examples/Smoke");
+	Ogre::SceneNode* particleSysNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+	particleSystem->fastForward(1.0);
+	particleSysNode->translate(mTankBodyNode->_getDerivedPosition());
+	particleSysNode->attachObject(particleSystem);
 }

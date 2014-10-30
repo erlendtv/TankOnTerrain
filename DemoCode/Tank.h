@@ -13,14 +13,17 @@ public:
 	~Tank(void);
 
 	int getId() { return mId; }
+	float getHp() { return mTankHealth;}
+	int getKills() { return mKills;}
+	int getDeaths(){ return mDeaths; } 
 	void setTankStateToAI(bool new_state);
-
 	bool keyRealesed(const OIS::KeyEvent &arg);
 	bool keyPressed(const OIS::KeyEvent &arg);
 	bool frameRenderingQueued(const Ogre::FrameEvent& evts);
 	void shootProjectile();
 	void createSmokeParticleSystem();
 	float calculateProjectileRange();
+	void createDeathParticleSystem();
 
 
 	/* tank nodes */
@@ -53,7 +56,8 @@ public:
 
 	std::vector<Tank>* mTanks;
 
-	int getKills(){ return mKills;}
+	TANK_STATE tank_state;
+	AI_STATE ai_state;
 
 private:
 
@@ -74,13 +78,12 @@ private:
 
 	float mTankHealth;
 	int mKills;
+	int mDeaths;
 
 	Tank* mCurrentlyAttacking;
 	int mSmokeSystemCount;
 
 	int mId;
-	TANK_STATE tank_state;
-	AI_STATE ai_state;
 
 	// AI METHODS n stuff
 	void tankWander();
