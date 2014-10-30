@@ -6,6 +6,7 @@
 #include "Tank.h"
 #include <vector>
 #include "PhysicsEngine.h"
+#include "Projectile.h"
 
 enum zoom_level {ZOOM1 = 500, ZOOM2 = 1000, ZOOM3 = 1500, ZOOM4 = 2000, ZOOM5 = 2500};
 
@@ -77,7 +78,7 @@ private:
 	// The tanks
 	std::vector<Tank> mTanks;    // declares a vector of tanks
 	bool addNewTank(const Ogre::Vector3 spawnPoint);
-	std::vector<Ogre::SceneNode*> projectiles;
+	std::vector<Projectile*> projectiles;
 
 	// Current camera zoom
 	Ogre::Vector3 camHeightAtPos;

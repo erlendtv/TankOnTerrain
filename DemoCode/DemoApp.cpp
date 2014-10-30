@@ -291,63 +291,16 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
         }
     }
 
-	// Move and rotate the tank
-	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
-	mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
-
-	// Get tank's current position
-	Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
-	// Move it above the ground
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition) + mHeightOffset;
-	mTankBodyNode->setPosition(tankPosition);
-
-	// Get current tank orientation
-	Ogre::Quaternion tankOrientation = mTankBodyNode->getOrientation();
-
-	// Get point on ground where the tank is
-	tankPosition.y = mTerrain->getHeightAtWorldPosition(tankPosition);
-
-	// Get a vector pointing in the local x direction
-	Ogre::Vector3 v1 = tankPosition + tankOrientation.xAxis();
-	v1.y = mTerrain->getHeightAtWorldPosition(v1);
-	v1 -= tankPosition;
-
-	// Get a vector pointing in the local -z direction
-	Ogre::Vector3 v2 = tankPosition - tankOrientation.zAxis();
-	v2.y = mTerrain->getHeightAtWorldPosition(v2);
-	v2 -= tankPosition;
-	
-	// Find the normal vector
-	Ogre::Vector3 normal = v1.crossProduct(v2);
-	normal.normalise();
-
-
-	// Rotate the tank turret
-	mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
-
-	// Calculate the tank barrel's current pitch
-	mBarrelPitch += mBarrelRotate;
-
-	// Clamp tank barrel rotation between 0 and 30 degrees
-	if(mBarrelPitch > 30)
-		mBarrelPitch = 30;
-	else if(mBarrelPitch < 0)
-		mBarrelPitch = 0;
-	else
-		mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
-
-	// Move tank?
-	//if (isTankSelected)
-	//{
-		//selectedTank->frameRenderingQueued(evt);
-	//}
-
-	int pos = 0;
 	for(std::vector<Tank>::iterator it = mTanks.begin(); it != mTanks.end(); ++it) {
+
 		it->frameRenderingQueued(evt);
-		pos++;
+
 	}
-//////////////////////////////////////////////////////////////////////////////////
+
+	/* add time to projectiles */
+	for(std::vector<Projectile*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
+		(*it)->Lived += evt.timeSinceLastFrame;
+	}
 	
 	// CAMERA ATTACHED TO OBJECT?
 	if(cameraAttachedToNode && isTankSelected){
@@ -455,10 +408,9 @@ bool DemoApp::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id ){
 		if(!cameraAttachedToNode){
 			getTankInfoForGUI();
 		}
-	return true;
+		return true;
 	}
 }
-
 void DemoApp::updateDetailsPanel(Tank* tank){
 	mDetailsPanel->setParamValue(0,Ogre::StringConverter::toString(tank->getId()));
 	mDetailsPanel->setParamValue(1,Ogre::StringConverter::toString(tank->getHp()));
@@ -471,7 +423,7 @@ void DemoApp::updateDetailsPanel(Tank* tank){
 	mDetailsPanel->setParamValue(3,Ogre::StringConverter::toString(tank->getKills()));
 	mDetailsPanel->setParamValue(4,Ogre::StringConverter::toString(tank->getDeaths()));
 	mDetailsPanel->setParamValue(5,"CURRENT");
-	if(!mDetailsPanel->isVisible){
+	if(!mDetailsPanel->isVisible()){
 		mDetailsPanel->show();
 	}
 		
@@ -692,19 +644,24 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 
 void DemoApp::checkProjectileCollision(){
 	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
-		for(std::vector<Ogre::SceneNode*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
-			Ogre::Vector3 pos = (*it)->_getDerivedPosition();
-			if(iTank->mTankBodyNode->_getDerivedPosition().distance(pos) < 50 || abs(pos.y - getProjectileHeightAtXZ(pos)) < 1){
-				if((*it)->getAttachedObjectIterator().hasMoreElements()){
-					spawnExplosionParticleSystem(pos);
-					Ogre::MovableObject* obj = static_cast<Ogre::MovableObject*>((*it)->getAttachedObject(0));
-					(*it)->getCreator()->destroyMovableObject(obj);	
-
-					iTank->tankGotHit();
+		for(std::vector<Projectile*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
+			if(iTank->mTankBodyNode->_getDerivedPosition().distance((*it)->node->_getDerivedPosition()) < 50  || abs((*it)->node->_getDerivedPosition().y - getProjectileHeightAtXZ((*it)->node->_getDerivedPosition())) < 1){
+				if((*it)->node->getAttachedObjectIterator().hasMoreElements()){
+					Ogre::Vector3 projectilePos = (*it)->node->getPosition();
+					projectilePos.y = getProjectileHeightAtXZ(projectilePos);
+					spawnExplosionParticleSystem(projectilePos);
+					Ogre::MovableObject* obj = static_cast<Ogre::MovableObject*>((*it)->node->getAttachedObject(0));
+					(*it)->node->getCreator()->destroyMovableObject(obj);
+					(*it)->exist = false;
+					iTank->tankGotHit((*it)->Lived);
 				}
 			}	
 		}
 	}
+
+	// get rid of removed projectiles
+	projectiles.erase(std::remove_if(projectiles.begin(), projectiles.end(), 
+		[](Projectile *p) { return !p->exist; }), projectiles.end());
 }
 
 void DemoApp::createWorldObstacles(){

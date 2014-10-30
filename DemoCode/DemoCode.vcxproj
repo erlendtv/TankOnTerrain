@@ -82,6 +82,7 @@
     <ClCompile Include="BaseApplication.cpp" />
     <ClCompile Include="DemoApp.cpp" />
     <ClCompile Include="PhysicsEngine.cpp" />
+    <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -92,6 +93,7 @@
     <ClInclude Include="BaseApplication.h" />
     <ClInclude Include="DemoApp.h" />
     <ClInclude Include="PhysicsEngine.h" />
+    <ClInclude Include="Projectile.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Tank.h" />
     <ClInclude Include="Utilities.h" />

@@ -2,6 +2,7 @@
 
 #include "Utilities.h"
 #include "PhysicsEngine.h"
+#include "Projectile.h"
 
 enum TANK_STATE {TANK_STATE_USER = 1, TANK_STATE_AI = 2};
 enum AI_STATE {AI_STATE_ROAMING = 1, AI_STATE_ATTACKING = 2};
@@ -14,9 +15,12 @@ public:
 
 	int getId() { return mId; }
 	float getHp() { return mTankHealth;}
-	int getKills() { return mKills;}
-	int getDeaths(){ return mDeaths; } 
-	void setTankStateToAI(bool new_state);
+	int getKills() {return mKills;}
+	int getDeaths() {return mDeaths;}
+ 	void setTankStateToAI(bool new_state);
+	void setAiState(AI_STATE new_state) {ai_state = new_state;}
+	Tank* getCurrentlyAttacking() { return mCurrentlyAttacking;}
+	void addKill(){mKills++;}
 	bool keyRealesed(const OIS::KeyEvent &arg);
 	bool keyPressed(const OIS::KeyEvent &arg);
 	bool frameRenderingQueued(const Ogre::FrameEvent& evts);
@@ -48,16 +52,17 @@ public:
 	Ogre::SceneManager* mSceneMgr;
 	Ogre::Terrain* mTerrain;
 	int mBoxCount;
-	std::vector<Ogre::SceneNode*>* projectiles;
+	std::vector<Projectile*>* projectiles;
 
 	Ogre::AxisAlignedBox Tank::getBoundingBox();
 
-	void tankGotHit();
+	bool tankGotHit(float lived);
 
 	std::vector<Tank>* mTanks;
 
 	TANK_STATE tank_state;
 	AI_STATE ai_state;
+	void respawn();
 
 private:
 
@@ -96,7 +101,6 @@ private:
 	int attack_move_counter;
 
 	void tankAttacking(Tank* tank_to_attack);
-	void respawn();
 
 	int ready_to_shoot;
 };
