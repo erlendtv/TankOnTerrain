@@ -446,7 +446,7 @@ void Tank::createSmokeParticleSystem(){
 	// Create unique name
 	std::ostringstream oss;
 	oss << mSmokeSystemCount;
-	std::string entityName = "smoke" + std::to_string(mId) + oss.str();
+	std::string entityName =  std::to_string(mId) + "shot" + oss.str();
 	// Increment box count
 	mSmokeSystemCount++;
 

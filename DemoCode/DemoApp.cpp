@@ -436,11 +436,13 @@ bool DemoApp::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id ){
 		selectTank();
 
 		if (!isTankSelected && insertBtnIsDown) {
+			if(tankCounter < 100){
 			Ogre::Ray mouseRay = mCamera->getCameraToViewportRay(
 					static_cast<float>(mMouse->getMouseState().X.abs)/mMouse->getMouseState().width, 
 					static_cast<float>(mMouse->getMouseState().Y.abs)/mMouse->getMouseState().height);				
 			Ogre::TerrainGroup::RayResult res = mTerrainGroup->rayIntersects(mouseRay);
 			addNewTank(res.position);
+			}
 		}
 		break;
 	case OIS::MB_Right:
@@ -759,7 +761,7 @@ void DemoApp::spawnExplosionParticleSystem(Ogre::Vector3 position){
 	// Create unique name
 	std::ostringstream oss;
 	oss << mExplosionCount;
-	std::string entityName = "explosion" + oss.str();
+	std::string entityName =  to_string(rand() % 10) + "explosion" + oss.str();
 	// Increment box count
 	mExplosionCount++;
 
