@@ -404,7 +404,7 @@ void DemoApp::selectTank(){
 	Ogre::RaySceneQueryResult &result = mRaySceneQuery->execute();
 	Ogre::RaySceneQueryResult::iterator itr = result.begin();
 	// If hit a movable object
-	if(itr != result.end() && itr->movable && itr->movable->getName() != "water" ){
+	if(itr != result.end() && itr->movable && itr->movable->getName() != "water" && itr->movable->getName().find("house") == std::string::npos){
 		string tankName = "chbo";
 		string barrelName = "chba";
 		string turretName = "chtu";
@@ -471,6 +471,9 @@ void DemoApp::updateDetailsPanel(Tank* tank){
 	mDetailsPanel->setParamValue(3,Ogre::StringConverter::toString(tank->getKills()));
 	mDetailsPanel->setParamValue(4,Ogre::StringConverter::toString(tank->getDeaths()));
 	mDetailsPanel->setParamValue(5,"CURRENT");
+	if(!mDetailsPanel->isVisible){
+		mDetailsPanel->show();
+	}
 		
 }
 
@@ -712,8 +715,8 @@ void DemoApp::createWorldObstacles(){
 		Ogre::SceneNode* houseNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 		houseNode->attachObject(house);
 		houseNode->scale(0.4,0.4,0.4);
-		float x = (rand() % 10000)-5000;
-		float z = (rand() % 10000)-5000;
+		float x = (rand() % 9000)-4000;
+		float z = (rand() % 8000)-4000;
 		float y = mTerrain->getHeightAtWorldPosition(x,0,z);
 		houseNode->translate(x,y+100,z);
 	}

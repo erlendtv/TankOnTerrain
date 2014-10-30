@@ -339,7 +339,7 @@ void Tank::shootProjectile(){
 	// Create unique name
 	std::ostringstream oss;
 	oss << mBoxCount;
-	std::string entityName = "Cube" + std::to_string(mId) + oss.str();
+	std::string entityName = std::to_string(mId) + "Cube" + oss.str();
 	// Increment box count
 	mBoxCount++;
 
@@ -444,8 +444,8 @@ void Tank::tankGotHit() {
 
 void Tank::respawn() {
 
-	float x = (rand() % 10000)-5000;
-	float z = (rand() % 10000)-5000;
+	float x = (rand() % 8000)-5000;
+	float z = (rand() % 8000)-5000;
 	float y = mTerrain->getHeightAtWorldPosition(x,0,z);
 	mTankBodyNode->setPosition(x,y+100,z);
 
