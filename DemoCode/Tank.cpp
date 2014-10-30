@@ -11,10 +11,10 @@ Tank::Tank(const int id)
 	mBarrelRotate = 0;
 	mBarrelPitch = 0;
 	mHeightOffset = 18;
-	mTankBodyMoveFactor = 1.5;
-	mTankBodyRotFactor = 1;
-	mTankTurretRotFactor = 1;
-	mTankBarrelPitchFactor = 1;
+	mTankBodyMoveFactor = 200;
+	mTankBodyRotFactor = 100;
+	mTankTurretRotFactor = 100;
+	mTankBarrelPitchFactor = 100;
 	mId = id;
 	//tank_state = TANK_STATE_AI;
 	tank_state = TANK_STATE_USER; // testing
@@ -29,6 +29,7 @@ Tank::Tank(const int id)
 	mProjectileInitVelocity = 800;
 	mSmokeSystemCount = 0;
 	ready_to_shoot = 1000;
+	mKills = 0;
 }
 
 
@@ -61,7 +62,7 @@ bool Tank::keyRealesed(const OIS::KeyEvent &arg)
 			break;
  
 		case OIS::KC_RIGHT:
-			mTurretRotate += mTankTurretRotFactor;
+			mTurretRotate += mTankTurretRotFactor;;
 			break;
 
 		case OIS::KC_UP:
@@ -166,8 +167,8 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	}
 
 	// Move and rotate the tank
-		mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
-		mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
+	mTankBodyNode->translate(mMove * evt.timeSinceLastFrame, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
+	mTankBodyNode->yaw(Ogre::Degree(mBodyRotate * evt.timeSinceLastFrame));
 
 		// Get tank's current position
 		Ogre::Vector3 tankPosition = mTankBodyNode->getPosition();
@@ -196,10 +197,10 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		normal.normalise();
 
 		// Rotate the tank turret
-		mTankTurretNode->yaw(Ogre::Degree(mTurretRotate));
+		mTankTurretNode->yaw(Ogre::Degree(mTurretRotate * evt.timeSinceLastFrame));
 
 		// Calculate the tank barrel's current pitch
-		mBarrelPitch += mBarrelRotate;
+		mBarrelPitch += (mBarrelRotate * evt.timeSinceLastFrame);
 
 		// Clamp tank barrel rotation between 0 and 30 degrees
 		if(mBarrelPitch > 30)
@@ -207,7 +208,7 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		else if(mBarrelPitch < 0)
 			mBarrelPitch = 0;
 		else
-			mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate));
+			mTankBarrelNode->roll(Ogre::Degree(-mBarrelRotate * evt.timeSinceLastFrame));
 
 
 /*
@@ -423,8 +424,35 @@ void Tank::tankAttacking(Tank* tank_to_attack) {
 
 }
 
-bool Tank::tankGotHit() {
-	// todo, set hp loss based on distance
+void Tank::tankGotHit() {
+	// todo, set hp loss based on distance'
+	mTankHealth -= 0.25;
+
+	float healthBarAdjuster = (1.0 - mTankHealth)/2;	// This must range from 0.0 to 0.5
+	// Set the health bar to the appropriate level
+	mHealthBarBB->setTexcoordRect(0.0 + healthBarAdjuster, 0.0, 0.5 + healthBarAdjuster, 1.0);
+	
+	//mTankBodyNode->attachObject(mHealthBar);
+
+	/* tell DemoApp that this tank is dead */
+	if (mTankHealth <= 0) {
+		respawn();
+	}
+}
+
+void Tank::respawn() {
+
+	float x = (rand() % 10000)-5000;
+	float z = (rand() % 10000)-5000;
+	float y = mTerrain->getHeightAtWorldPosition(x,0,z);
+	mTankBodyNode->setPosition(x,y+100,z);
+
+	mTankHealth = 1; // 100% hp
+	mKills = 0;
+
+	float healthBarAdjuster = (1.0 - mTankHealth)/2;	// This must range from 0.0 to 0.5
+	// Set the health bar to the appropriate level
+	mHealthBarBB->setTexcoordRect(0.0 + healthBarAdjuster, 0.0, 0.5 + healthBarAdjuster, 1.0);
 }
 
 void Tank::setTankStateToAI(bool new_state) 

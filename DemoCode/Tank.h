@@ -49,9 +49,11 @@ public:
 
 	Ogre::AxisAlignedBox Tank::getBoundingBox();
 
-	bool tankGotHit();
+	void tankGotHit();
 
 	std::vector<Tank>* mTanks;
+
+	int getKills(){ return mKills;}
 
 private:
 
@@ -71,6 +73,7 @@ private:
 	float mProjectileInitVelocity;
 
 	float mTankHealth;
+	int mKills;
 
 	Tank* mCurrentlyAttacking;
 	int mSmokeSystemCount;
@@ -90,6 +93,7 @@ private:
 	int attack_move_counter;
 
 	void tankAttacking(Tank* tank_to_attack);
+	void respawn();
 
 	int ready_to_shoot;
 };
