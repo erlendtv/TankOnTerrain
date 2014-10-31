@@ -30,6 +30,7 @@ Tank::Tank(const int id)
 	mSmokeSystemCount = 0;
 	ready_to_shoot = 1000;
 	mKills = 0;
+	mDeaths = 0;
 }
 
 
@@ -134,7 +135,7 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			int i = 0;
 			for(std::vector<Tank>::iterator it = mTanks->begin(); it != mTanks->end(); ++it) {
 				if (it->getId() != getId()) {
-					if ((mTankBodyNode->getPosition() - mTanks->at(i).mTankBodyNode->getPosition()).length() < 500) {
+					if ((mTankBodyNode->getPosition() - mTanks->at(i).mTankBodyNode->getPosition()).length() < 1000) {
 						mCurrentlyAttacking = &mTanks->at(i);
 						ai_state = AI_STATE_ATTACKING;
 						mBodyRotate = 0;
@@ -145,7 +146,11 @@ bool Tank::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			}
 
 		} else if (ai_state == AI_STATE_ATTACKING) {
-			// todo: check if mCurrentlyAttacking tank exists..
+
+			if ((mCurrentlyAttacking->mTankBodyNode->getPosition().length() - mTankBodyNode->getPosition().length()) > 2000) {
+				ai_state = AI_STATE_ROAMING;
+			}
+
 			tankAttacking(mCurrentlyAttacking);
 
 			if (attack_move) {
@@ -351,6 +356,7 @@ void Tank::shootProjectile(){
 	node->scale(0.075, 0.075, 0.075);
 	Projectile* p = new Projectile();
 	p->node = node;
+	p->tankId = mId;
 	(*projectiles).push_back(p);
 
 	// Create a collision shape
@@ -426,7 +432,7 @@ void Tank::tankAttacking(Tank* tank_to_attack) {
 
 }
 
-void Tank::tankGotHit(float lived) {
+bool Tank::tankGotHit(float lived) {
 	// set hp loss based on distance'
 	if (lived < 0.25)
 		lived = 0.25;
@@ -441,8 +447,11 @@ void Tank::tankGotHit(float lived) {
 
 	/* tell DemoApp that this tank is dead */
 	if (mTankHealth <= 0) {
-		respawn();
+		mDeaths++;
+		respawn();	
+		return false;
 	}
+	return true;
 }
 
 void Tank::respawn() {

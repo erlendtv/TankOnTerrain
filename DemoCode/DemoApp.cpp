@@ -341,10 +341,10 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		//selectedTank->frameRenderingQueued(evt);
 	//}*/
 
-	int pos = 0;
 	for(std::vector<Tank>::iterator it = mTanks.begin(); it != mTanks.end(); ++it) {
+
 		it->frameRenderingQueued(evt);
-		pos++;
+
 	}
 
 	/* add time to projectiles */
@@ -701,7 +701,9 @@ void DemoApp::checkProjectileCollision(){
 					(*it)->node->getCreator()->destroyMovableObject(obj);
 					(*it)->exist = false;
 					
-					iTank->tankGotHit((*it)->Lived);
+					if (iTank->tankGotHit((*it)->Lived)) {
+						//mTanks.at((*it)->tankId).addKill();
+					}
 				}
 			}	
 		}

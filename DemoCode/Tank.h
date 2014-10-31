@@ -15,6 +15,11 @@ public:
 
 	int getId() { return mId; }
 	void setTankStateToAI(bool new_state);
+	void setAiState(AI_STATE new_state) {ai_state = new_state;}
+	Tank* getCurrentlyAttacking() { return mCurrentlyAttacking;}
+	void addKill(){mKills++;}
+	int getKills(){return mKills;}
+	int getDeaths(){return mDeaths;}
 
 	bool keyRealesed(const OIS::KeyEvent &arg);
 	bool keyPressed(const OIS::KeyEvent &arg);
@@ -50,11 +55,11 @@ public:
 
 	Ogre::AxisAlignedBox Tank::getBoundingBox();
 
-	void tankGotHit(float lived);
+	bool tankGotHit(float lived);
 
 	std::vector<Tank>* mTanks;
 
-	int getKills(){ return mKills;}
+	void respawn();
 
 private:
 
@@ -75,6 +80,7 @@ private:
 
 	float mTankHealth;
 	int mKills;
+	int mDeaths;
 
 	Tank* mCurrentlyAttacking;
 	int mSmokeSystemCount;
@@ -94,7 +100,6 @@ private:
 	int attack_move_counter;
 
 	void tankAttacking(Tank* tank_to_attack);
-	void respawn();
 
 	int ready_to_shoot;
 };

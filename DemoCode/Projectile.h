@@ -1,4 +1,5 @@
 #pragma once
+
 class Projectile
 {
 public:
@@ -7,9 +8,8 @@ public:
 
 	Ogre::SceneNode* node;
 	bool exist;
-
+	int tankId;
 	float Lived;
 
-private:
 };
 
