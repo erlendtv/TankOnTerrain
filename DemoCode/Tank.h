@@ -2,6 +2,7 @@
 
 #include "Utilities.h"
 #include "PhysicsEngine.h"
+#include "Projectile.h"
 
 enum TANK_STATE {TANK_STATE_USER = 1, TANK_STATE_AI = 2};
 enum AI_STATE {AI_STATE_ROAMING = 1, AI_STATE_ATTACKING = 2};
@@ -45,11 +46,11 @@ public:
 	Ogre::SceneManager* mSceneMgr;
 	Ogre::Terrain* mTerrain;
 	int mBoxCount;
-	std::vector<Ogre::SceneNode*>* projectiles;
+	std::vector<Projectile*>* projectiles;
 
 	Ogre::AxisAlignedBox Tank::getBoundingBox();
 
-	void tankGotHit();
+	void tankGotHit(float lived);
 
 	std::vector<Tank>* mTanks;
 

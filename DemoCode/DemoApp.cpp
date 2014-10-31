@@ -290,7 +290,7 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
         }
     }
 
-	// Move and rotate the tank
+	/* Move and rotate the tank
 	mTankBodyNode->translate(mMove, 0, 0, Ogre::Node::TransformSpace::TS_LOCAL);
 	mTankBodyNode->yaw(Ogre::Degree(mBodyRotate));
 
@@ -339,12 +339,17 @@ bool DemoApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	//if (isTankSelected)
 	//{
 		//selectedTank->frameRenderingQueued(evt);
-	//}
+	//}*/
 
 	int pos = 0;
 	for(std::vector<Tank>::iterator it = mTanks.begin(); it != mTanks.end(); ++it) {
 		it->frameRenderingQueued(evt);
 		pos++;
+	}
+
+	/* add time to projectiles */
+	for(std::vector<Projectile*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
+		(*it)->Lived += evt.timeSinceLastFrame;
 	}
 //////////////////////////////////////////////////////////////////////////////////
 	
@@ -463,48 +468,10 @@ bool DemoApp::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id ){
 				linearVelocity.normalize();
 				// Scale to appropriate velocity
 				linearVelocity *= 50.0f;
-
-				// Create and shoot the box
-				shootBox(convert(mouseRay.getOrigin()), btQuaternion(0,0,0,1), linearVelocity);
 		break;
 	}
 	return true;
 }
-
-void DemoApp::shootBox(const btVector3& position, const btQuaternion& orientation, const btVector3& linearVelocity)
-{
-	// Create unique name
-	std::ostringstream oss;
-	oss << mBoxCount;
-	std::string entityName = "Cube" + oss.str();
-	// Increment box count
-	mBoxCount++;
-		
-	// Create cube mesh with unique name
-	Ogre::Entity* cube = mSceneMgr->createEntity(entityName, "cube.mesh");
-	Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	node->attachObject(cube);
-	// Scale it to appropriate size
-	node->scale(0.1, 0.1, 0.1);
-	projectiles.push_back(node);
-
-	// Create a collision shape
-	// Note that the size should match the size of the object that will be displayed
-	btCollisionShape* collisionShape = new btBoxShape(btVector3(5, 5, 5));
-
-	// The object's starting transformation
-	btTransform startingTrans;
-	startingTrans.setIdentity();
-	startingTrans.setOrigin(position);
-	startingTrans.setRotation(orientation);
-
-	// Create the rigid body
-	btRigidBody* rigidBody = mPhysicsEngine->createRigidBody(1.0f, startingTrans, collisionShape, node);
-
-	// Give the rigid body an initial velocity
-	rigidBody->setLinearVelocity(linearVelocity);
-
-} 
  
 // OIS::KeyListener
 bool DemoApp::keyPressed( const OIS::KeyEvent &arg )
@@ -724,20 +691,24 @@ bool DemoApp::addNewTank(const Ogre::Vector3 spawnPoint) {
 
 void DemoApp::checkProjectileCollision(){
 	for(std::vector<Tank>::iterator iTank = mTanks.begin(); iTank != mTanks.end(); ++iTank){
-		for(std::vector<Ogre::SceneNode*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
-			if(iTank->mTankBodyNode->_getDerivedPosition().distance((*it)->_getDerivedPosition()) < 50){
-				if((*it)->getAttachedObjectIterator().hasMoreElements()){
-					Ogre::Vector3 projectilePos = (*it)->getPosition();
+		for(std::vector<Projectile*>::iterator it = projectiles.begin(); it != projectiles.end(); ++it) {
+			if(iTank->mTankBodyNode->_getDerivedPosition().distance((*it)->node->_getDerivedPosition()) < 50){
+				if((*it)->node->getAttachedObjectIterator().hasMoreElements()){
+					Ogre::Vector3 projectilePos = (*it)->node->getPosition();
 					projectilePos.y = getProjectileHeightAtXZ(projectilePos);
 					spawnExplosionParticleSystem(projectilePos);
-					Ogre::MovableObject* obj = static_cast<Ogre::MovableObject*>((*it)->getAttachedObject(0));
-					(*it)->getCreator()->destroyMovableObject(obj);	
-
-					iTank->tankGotHit();
+					Ogre::MovableObject* obj = static_cast<Ogre::MovableObject*>((*it)->node->getAttachedObject(0));
+					(*it)->node->getCreator()->destroyMovableObject(obj);
+					(*it)->exist = false;
+					
+					iTank->tankGotHit((*it)->Lived);
 				}
 			}	
 		}
 	}
+	// get rid of removed projectiles
+	projectiles.erase(std::remove_if(projectiles.begin(), projectiles.end(), 
+		[](Projectile *p) { return !p->exist; }), projectiles.end());
 }
 
 void DemoApp::createWorldObstacles(){
@@ -768,7 +739,7 @@ void DemoApp::spawnExplosionParticleSystem(Ogre::Vector3 position){
 	// Increment box count
 	mExplosionCount++;
 
-	Ogre::ParticleSystem* particleSystem = mSceneMgr->createParticleSystem(entityName,"Examples/Smoke");
+	Ogre::ParticleSystem* particleSystem = mSceneMgr->createParticleSystem(entityName,"Examples/Explode");
 	Ogre::SceneNode* particleSysNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	particleSysNode->translate(position);
 	particleSysNode->attachObject(particleSystem);

@@ -349,7 +349,9 @@ void Tank::shootProjectile(){
 	node->attachObject(projectile);
 	// Scale it to appropriate size
 	node->scale(0.075, 0.075, 0.075);
-	(*projectiles).push_back(node);
+	Projectile* p = new Projectile();
+	p->node = node;
+	(*projectiles).push_back(p);
 
 	// Create a collision shape
 	// Note that the size should match the size of the object that will be displayed
@@ -424,9 +426,12 @@ void Tank::tankAttacking(Tank* tank_to_attack) {
 
 }
 
-void Tank::tankGotHit() {
-	// todo, set hp loss based on distance'
-	mTankHealth -= 0.25;
+void Tank::tankGotHit(float lived) {
+	// set hp loss based on distance'
+	if (lived < 0.25)
+		lived = 0.25;
+
+	mTankHealth -= 0.1 / lived;
 
 	float healthBarAdjuster = (1.0 - mTankHealth)/2;	// This must range from 0.0 to 0.5
 	// Set the health bar to the appropriate level
